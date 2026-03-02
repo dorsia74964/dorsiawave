@@ -1,48 +1,3 @@
-/*
-Template Name: Tunis - Personal Portfolio
-Author: celtano
-Author URI: http://themeforest.net/user/celtano
-Description: Tunis - Personal Portfolio
-Version: 1.0
-*/
-
-/*------------------------------------------------------------------
-[Table of contents]
-	+ General
-	    - Miscellaneous
-		- Light Body
-		- Buttons
-		- Page Title
-	+ Header
-		- Desktop Navigation
-		- Mobile Navigation
-	+ Pages
-		- Homepage
-		+ About
-		    - Personal Info List
-			- Box Stats
-			- Resume
-			- Skills
-		+ Portfolio
-		    - Grid
-		    + Slideshow
-                - Embedded Videos
-                - Carousel
-                - Navigation
-        + Contact
-            - Left Side
-            - Contact Form
-		+ Blog
-            - Latest Posts
-            - Pagination
-	- Responsive Design Styles
--------------------------------------------------------------------*/
-
-/* [ GENERAL ] */
-/*================================================== */
-
-/*** Miscellaneous ***/
-
 html {
   overflow-x: hidden;
   height: 100%;
@@ -1765,4 +1720,17 @@ body.light hr.separator {
   .separator.mt-1 {
     margin-top: 35px !important;
   }
+}
+
+.skill-box {
+    border: 1px solid #2a2a2a;
+    padding: 20px 10px;
+    border-radius: 6px;
+    transition: 0.3s ease;
+    background-color: transparent;
+}
+
+.skill-box:hover {
+    border-color: #4169e1; 
+    transform: translateY(-4px);
 }
