@@ -1,5 +1,3 @@
-# 👨‍💻 Cybersecurity Portfolio
-
 ## 📌 About
 This repository showcases my journey in **cybersecurity**. I am currently learning and practicing **penetration testing, ethical hacking, red Teaming and security fundamentals**.
 
