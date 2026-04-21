@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <!-- EDIT: Change the browser tab title below -->
+    <title>World's First Virus | Thomas Shelby</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+    <!-- ============================================================
+         THEME CONFIG — Same as index.html. Do not edit.
+         ============================================================ -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#ffdad6",
+                        "outline": "#8d90a1",
+                        "background": "#0a0a0a",
+                        "on-secondary": "#3c2f11",
+                        "surface-container-low": "#161616",
+                        "on-primary-container": "#fdfbff",
+                        "on-secondary-container": "#c8b38a",
+                        "on-secondary-fixed-variant": "#544525",
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#2a2a2a",
+                        "inverse-on-surface": "#303030",
+                        "secondary-fixed": "#f7e0b5",
+                        "on-primary-fixed": "#001551",
+                        "on-surface": "#e2e2e2",
+                        "surface-dim": "#0a0a0a",
+                        "on-surface-variant": "#a0a0a0",
+                        "secondary-container": "#2a2418",
+                        "error-container": "#93000a",
+                        "primary-container": "#3366ff",
+                        "inverse-surface": "#e2e2e2",
+                        "surface": "#0a0a0a",
+                        "tertiary-container": "#3366ff",
+                        "on-secondary-fixed": "#251a01",
+                        "surface-container": "#121212",
+                        "on-background": "#e2e2e2",
+                        "primary": "#3366ff",
+                        "on-primary-fixed-variant": "#0039b4",
+                        "error": "#ffb4ab",
+                        "primary-fixed": "#dce1ff",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#0039b4",
+                        "tertiary-fixed": "#dce1ff",
+                        "on-error": "#690005",
+                        "surface-variant": "#1a1a1a",
+                        "surface-container-lowest": "#050505",
+                        "tertiary-fixed-dim": "#3366ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0px",
+                        "lg": "0px",
+                        "xl": "0px",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Space Grotesk"]
+                    }
+                },
+            },
+        }
+    </script>
+
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 20px;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #3366ff; }
+
+        body {
+            background-color: #0a0a0a;
+            background-image:
+                radial-gradient(rgba(41, 55, 97, 0.15) 1px, transparent 0),
+                radial-gradient(circle at 50% 50%, #1a1b26 0%, #0a0a0a 100%);
+            background-size: 32px 32px, 100% 100%;
+            background-attachment: fixed;
+        }
+
+        .bg-vignette {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(10, 10, 10, 0.8) 100%);
+            z-index: -1;
+        }
+
+        /* Smooth scroll for TOC anchor links */
+        html { scroll-behavior: smooth; }
+
+        /* Section heading anchor offset for fixed nav */
+        section[id] { scroll-margin-top: 100px; }
+    </style>
+</head>
+<body class="text-on-surface font-body selection:bg-primary selection:text-on-primary">
+
+<div class="bg-vignette"></div>
+
+<!-- ============================================================
+     NAVIGATION BAR — Blog is active (this is a blog post)
+     ============================================================ -->
+<nav class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant">
+    <div class="flex justify-between items-center w-full px-8 py-5 max-w-[1440px] mx-auto">
+        <!-- EDIT: Change site brand name -->
+        <div class="text-xl font-bold tracking-tighter text-primary font-headline">Thomas Shelby</div>
+        <div class="hidden md:flex items-center space-x-10">
+            <a class="font-label tracking-tighter text-[11px] uppercase text-on-surface/60 hover:text-primary transition-colors" href="index.html">Home</a>
+            <!-- Blog = active (this is a blog post page) -->
+            <a class="font-label tracking-tighter text-[11px] uppercase text-primary" href="blog.html">Blog</a>
+            <a class="font-label tracking-tighter text-[11px] uppercase text-on-surface/60 hover:text-primary transition-colors" href="ctf.html">CTF Writeups</a>
+        </div>
+    </div>
+</nav>
+
+<main class="pt-32 pb-24 px-6 md:px-12 max-w-[1440px] mx-auto">
+
+    <!-- ============================================================
+         ARTICLE HERO
+         EDIT: Update title, date, and reading time
+         ============================================================ -->
+    <div class="mb-16 border-l-2 border-primary pl-8">
+        <div class="flex flex-wrap items-center gap-4 mb-8">
+            <!-- EDIT: Back link -->
+            <a href="blog.html" class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-label text-[10px] uppercase tracking-widest">
+                <span class="material-symbols-outlined" style="font-size:14px;">arrow_back</span> Back to Archives
+            </a>
+            <div class="h-px w-8 bg-outline-variant"></div>
+            <span class="font-label text-[9px] uppercase tracking-[0.3em] text-primary font-bold">Malware Analysis</span>
+        </div>
+
+        <!-- EDIT: Article title -->
+        <h1 class="font-headline text-4xl md:text-6xl font-bold tracking-tighter text-on-surface leading-[1] mb-8 uppercase max-w-4xl">
+            The World's First Virus:<br/><span class="text-on-surface/30">From Creeper to Modern Malware</span>
+        </h1>
+
+        <div class="flex flex-wrap items-center gap-8 text-[10px] font-label uppercase tracking-[0.2em] text-on-surface-variant">
+            <!-- EDIT: Author name -->
+            <span class="flex items-center gap-2">
+                <span class="material-symbols-outlined" style="font-size:14px;">person</span> Vikram
+            </span>
+            <!-- EDIT: Publication date -->
+            <span class="flex items-center gap-2">
+                <span class="material-symbols-outlined" style="font-size:14px;">calendar_today</span> 19.04.2026
+            </span>
+            <span class="flex items-center gap-2">
+                <span class="material-symbols-outlined" style="font-size:14px;">schedule</span> 14 min read
+            </span>
+            <span class="flex items-center gap-2">
+                <span class="material-symbols-outlined" style="font-size:14px;">category</span> Malware History · Threat Evolution
+            </span>
+        </div>
+    </div>
+
+
+    <!-- ============================================================
+         MAIN LAYOUT: Article + Sidebar
+         ============================================================ -->
+    <div class="flex flex-col lg:flex-row gap-16">
+
+        <!-- ============================
+             ARTICLE BODY
+             ============================ -->
+        <article class="flex-grow min-w-0 space-y-20">
+
+            <!-- ==============================
+                 SECTION 1 — INTRODUCTION
+                 ============================== -->
+            <section id="introduction">
+                <div class="flex items-center gap-4 mb-8">
+                    <span class="font-label text-[9px] uppercase tracking-[0.4em] text-primary font-bold">01</span>
+                    <div class="h-px flex-grow bg-outline-variant"></div>
+                </div>
+                <h2 class="font-headline text-2xl font-bold uppercase tracking-tight mb-6 text-on-surface">Introduction</h2>
+
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    Before ransomware encrypted hospitals. Before APTs dismantled power grids. Before nation-state actors used code as a weapon of war — there was a simple program on ARPANET that did something no program had ever done before: it copied itself onto another machine and announced its arrival with a taunting message.
+                </p>
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    That was 1971. The program was called <strong class="text-on-surface">Creeper</strong>. It didn't steal data, extort victims, or disrupt infrastructure. It was, by all accounts, an experiment — a demonstration that a program could propagate across a network autonomously. But that single idea — self-replication — became the genetic blueprint for every piece of malware that followed.
+                </p>
+                <p class="text-on-surface-variant leading-relaxed">
+                    This article traces the complete lineage of digital malware: from an academic curiosity on a classified government network, through the age of floppy-disk viruses, to the industrial-grade cyberweapons of today. Understanding where malware came from is essential to understanding why it works the way it does — and why defending against it is so difficult.
+                </p>
+            </section>
+
+
+            <!-- ==============================
+                 SECTION 2 — CREEPER (1971)
+                 ============================== -->
+            <section id="creeper">
+                <div class="flex items-center gap-4 mb-8">
+                    <span class="font-label text-[9px] uppercase tracking-[0.4em] text-primary font-bold">02</span>
+                    <div class="h-px flex-grow bg-outline-variant"></div>
+                </div>
+                <h2 class="font-headline text-2xl font-bold uppercase tracking-tight mb-6 text-on-surface">Creeper (1971) — The World's First Self-Replicating Program</h2>
+
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    In 1971, a programmer named <strong class="text-on-surface">Bob Thomas</strong> at BBN Technologies (Bolt Beranek and Newman) — the company that built the IMP routers for ARPANET — wrote an experimental program called Creeper. ARPANET at the time connected only a handful of research institutions and military sites, running on PDP-10 mainframes under the TENEX operating system.
+                </p>
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    Creeper was not malicious. Thomas wanted to test a theoretical concept: could a program move itself across a network? Not just copy its output, but physically migrate — executing on a remote machine, then deleting itself from the previous one. This concept, which Thomas called a "mobile application," was groundbreaking. The program would traverse ARPANET nodes and display a message on each infected terminal:
+                </p>
+
+                <!-- Terminal block -->
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm mb-8">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">Creeper Output — ARPANET, 1971</span>
+                    </div>
+                    <pre class="text-primary">"I'M THE CREEPER, CATCH ME IF YOU CAN!"</pre>
+                </div>
+
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    In its original form, Creeper was a <strong class="text-on-surface">worm</strong>, not a virus — it did not attach itself to existing programs. Later variants were modified to replicate rather than migrate, creating copies on each new machine it reached. This modification is what classifies those later versions as the first true computer virus.
+                </p>
+
+                <!-- Key Finding box -->
+                <div class="border-l-4 border-primary bg-primary/5 p-6 mb-8">
+                    <p class="text-[10px] font-label font-bold text-primary tracking-widest uppercase mb-2">Historical Significance</p>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">
+                        Creeper demonstrated for the first time that a program could autonomously replicate and spread across a network — the foundational concept behind every computer virus, worm, and self-propagating malware ever created. The network it traversed, ARPANET, would eventually become the Internet.
+                    </p>
+                </div>
+
+                <h3 class="font-headline text-lg font-bold uppercase tracking-tight mb-4 text-on-surface">Technical Architecture</h3>
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    Creeper leveraged the TENEX operating system's remote execution features. It used the ARPANET File Transfer Protocol (an early precursor to FTP) to copy itself to connected machines. The program was written to identify connected ARPANET nodes, establish a connection via the available inter-machine communication protocols, transfer a copy of itself, and execute on the target — all without any human intervention after initial launch.
+                </p>
+                <p class="text-on-surface-variant leading-relaxed">
+                    By modern standards, this is trivial. In 1971, it was remarkable enough that it prompted the immediate creation of the first countermeasure program: <strong class="text-on-surface">Reaper</strong>.
+                </p>
+            </section>
+
+
+            <!-- ==============================
+                 SECTION 3 — REAPER (1972)
+                 ============================== -->
+            <section id="reaper">
+                <div class="flex items-center gap-4 mb-8">
+                    <span class="font-label text-[9px] uppercase tracking-[0.4em] text-primary font-bold">03</span>
+                    <div class="h-px flex-grow bg-outline-variant"></div>
+                </div>
+                <h2 class="font-headline text-2xl font-bold uppercase tracking-tight mb-6 text-on-surface">Reaper (1972) — The World's First Anti-Virus</h2>
+
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    Shortly after Creeper appeared, another programmer — also at BBN, likely Ray Tomlinson (who also invented email) — wrote a program called <strong class="text-on-surface">Reaper</strong>. Its sole purpose was to traverse ARPANET and delete copies of Creeper wherever it found them. Reaper was itself a self-replicating program, making it the world's first antivirus software — and paradoxically, also a worm.
+                </p>
+
+                <!-- Key Finding box -->
+                <div class="border-l-4 border-primary bg-primary/5 p-6">
+                    <p class="text-[10px] font-label font-bold text-primary tracking-widest uppercase mb-2">The Eternal Dynamic</p>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">
+                        The Creeper/Reaper dynamic established the arms race that defines cybersecurity to this day: every offensive capability produces a corresponding defensive response, which is then bypassed by the next generation of offensive capability. This cycle has never stopped accelerating.
+                    </p>
+                </div>
+            </section>
+
+
+            <!-- ==============================
+                 SECTION 4 — ELK CLONER (1982)
+                 ============================== -->
+            <section id="elk-cloner">
+                <div class="flex items-center gap-4 mb-8">
+                    <span class="font-label text-[9px] uppercase tracking-[0.4em] text-primary font-bold">04</span>
+                    <div class="h-px flex-grow bg-outline-variant"></div>
+                </div>
+                <h2 class="font-headline text-2xl font-bold uppercase tracking-tight mb-6 text-on-surface">Elk Cloner (1982) — First Virus in the Wild</h2>
+
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    For a decade after Creeper, self-replicating code remained confined to academic and research networks. In 1982, a 15-year-old high school student named <strong class="text-on-surface">Rich Skrenta</strong> in Pittsburgh, Pennsylvania, changed that. As a prank on his friends, Skrenta wrote <strong class="text-on-surface">Elk Cloner</strong> — the first computer virus to spread "in the wild," meaning outside of a controlled lab environment, via physical media.
+                </p>
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    Elk Cloner targeted the <strong class="text-on-surface">Apple II</strong> platform and spread via floppy disks. It worked by infecting the boot sector of any floppy disk inserted into an infected machine. The virus would remain dormant for the first 49 boots of the infected machine, then on the 50th boot, it would display a poem on screen:
+                </p>
+
+                <!-- Terminal block -->
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm mb-8">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">Elk Cloner Payload Poem — Apple II, 1982</span>
+                    </div>
+                    <pre class="text-primary text-xs leading-relaxed">Elk Cloner: The program with a personality
+It will get on all your disks
+It will infiltrate your chips
+Yes, it's Cloner!
+
+It will stick to you like glue
+It will modify RAM too
+Send in the Cloner!</pre>
+                </div>
+
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    Elk Cloner introduced concepts that would define malware for decades: <strong class="text-on-surface">boot sector infection</strong>, <strong class="text-on-surface">counter-based payload triggering</strong>, and <strong class="text-on-surface">physical media as a propagation vector</strong>. The floppy disk became the USB drive of its era — shared between friends, passed around schools, unknowingly carrying copies of the virus from machine to machine.
+                </p>
+
+                <div class="border-l-4 border-primary bg-primary/5 p-6">
+                    <p class="text-[10px] font-label font-bold text-primary tracking-widest uppercase mb-2">Key Innovation</p>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">
+                        Elk Cloner was the first virus to cross the boundary from controlled network to uncontrolled real-world propagation. It proved that a virus could spread through social behaviour — people sharing disks — rather than requiring any network infrastructure at all. This insight remains exploited today in social engineering attacks.
+                    </p>
+                </div>
+            </section>
+
+
+            <!-- ==============================
+                 SECTION 5 — BRAIN (1986)
+                 ============================== -->
+            <section id="brain">
+                <div class="flex items-center gap-4 mb-8">
+                    <span class="font-label text-[9px] uppercase tracking-[0.4em] text-primary font-bold">05</span>
+                    <div class="h-px flex-grow bg-outline-variant"></div>
+                </div>
+                <h2 class="font-headline text-2xl font-bold uppercase tracking-tight mb-6 text-on-surface">Brain (1986) — First PC Virus &amp; First Stealth Techniques</h2>
+
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    In January 1986, two brothers from Lahore, Pakistan — <strong class="text-on-surface">Basit Farooq Alvi</strong> (19 years old) and <strong class="text-on-surface">Amjad Farooq Alvi</strong> (24 years old) — released a virus called <strong class="text-on-surface">Brain</strong>, making it the first computer virus targeting IBM PC compatible computers. Remarkably, they included their real names, address, and phone number inside the virus code — initially as a copyright protection measure for their medical software, which was being pirated in Pakistan.
+                </p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm mb-8">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">Brain Virus Internal Header</span>
+                    </div>
+                    <pre class="text-primary text-xs leading-relaxed">Welcome to the Dungeon
+(c) 1986 Brain & Amjads (pvt) Ltd
+BRAIN COMPUTER SERVICES
+730 NIZAM BLOCK ALLAMA IQBAL TOWN
+LAHORE-PAKISTAN
+PHONE :430791,443248,280530
+Beware of this VIRUS....
+Contact us for vaccination.........</pre>
+                </div>
+
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    Brain introduced several critical techniques that would become foundational to malware design:
+                </p>
+
+                <div class="space-y-4 mb-8">
+                    <div class="flex gap-4 p-5 bg-surface-container-low border border-outline-variant">
+                        <span class="material-symbols-outlined text-primary shrink-0" style="font-size:18px;">security</span>
+                        <div>
+                            <p class="font-label text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Stealth Technique</p>
+                            <p class="text-on-surface-variant text-xs leading-relaxed">Brain was the first virus to use stealth techniques. When an infected boot sector was read, the virus intercepted the read request and transparently returned the original, uninfected boot sector — making it appear clean to any diagnostic tool checking the disk.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 p-5 bg-surface-container-low border border-outline-variant">
+                        <span class="material-symbols-outlined text-primary shrink-0" style="font-size:18px;">storage</span>
+                        <div>
+                            <p class="font-label text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Volume Label Modification</p>
+                            <p class="text-on-surface-variant text-xs leading-relaxed">Brain changed the volume label of infected disks to "(c) Brain" — a signature move that early security researchers used to detect infection, but which also showed brazen confidence from the authors.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 p-5 bg-surface-container-low border border-outline-variant">
+                        <span class="material-symbols-outlined text-primary shrink-0" style="font-size:18px;">device_hub</span>
+                        <div>
+                            <p class="font-label text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Bad Sector Marking</p>
+                            <p class="text-on-surface-variant text-xs leading-relaxed">Brain hid its code in sectors it marked as "bad" — sectors that the operating system would skip during normal file operations, providing a persistent hidden storage area outside the visible file system.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-on-surface-variant leading-relaxed">
+                    The Alvi brothers have confirmed in interviews that the virus spread far beyond their intentions — reaching the United States, Europe, and beyond through shared floppy disks. They reportedly received calls from infected users worldwide. Brain demonstrated that a virus could cross international borders through physical media, foreshadowing the global reach of internet-era malware.
+                </p>
+            </section>
+
+
+            <!-- ==============================
+                 SECTION 6 — MORRIS WORM (1988)
+                 ============================== -->
+            <section id="morris-worm">
+                <div class="flex items-center gap-4 mb-8">
+                    <span class="font-label text-[9px] uppercase tracking-[0.4em] text-primary font-bold">06</span>
+                    <div class="h-px flex-grow bg-outline-variant"></div>
+                </div>
+                <h2 class="font-headline text-2xl font-bold uppercase tracking-tight mb-6 text-on-surface">Morris Worm (1988) — The First Internet Catastrophe</h2>
+
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    On November 2, 1988, <strong class="text-on-surface">Robert Tappan Morris</strong>, a graduate student at Cornell University, released a worm onto the early Internet from MIT's systems (to obscure its origin). Morris claimed his intent was to gauge the size of the internet. Within hours, the worm had infected thousands of machines — approximately 6,000 out of an estimated 60,000 connected internet hosts, representing roughly 10% of the internet at the time.
+                </p>
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    The Morris Worm exploited three specific vulnerabilities:
+                </p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm mb-8">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">Morris Worm — Exploitation Vectors</span>
+                    </div>
+                    <pre class="text-on-surface-variant text-xs leading-relaxed"><span class="text-primary">[1]</span> sendmail DEBUG vulnerability — allowed execution of arbitrary commands
+    via the debug feature in sendmail (SMTP daemon)
+
+<span class="text-primary">[2]</span> fingerd buffer overflow — classic stack-based buffer overflow in
+    the finger daemon, enabling arbitrary code execution
+
+<span class="text-primary">[3]</span> rsh/rexec trusted hosts (.rhosts) — exploited weak Unix
+    r-services authentication to execute commands on trusted machines</pre>
+                </div>
+
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    A critical bug in the worm's code caused it to replicate far more aggressively than Morris intended. Machines infected multiple times ran dozens of copies simultaneously, consuming CPU and memory until systems became unusable. The worm caused an estimated $10–100 million in damages (1988 dollars) and took the affected machines days to fully clean.
+                </p>
+
+                <div class="border-l-4 border-primary bg-primary/5 p-6">
+                    <p class="text-[10px] font-label font-bold text-primary tracking-widest uppercase mb-2">Legal Precedent</p>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">
+                        Morris was prosecuted under the Computer Fraud and Abuse Act (CFAA) — the first such prosecution in the United States. He was sentenced to three years probation, fined $10,050, and ordered to perform 400 hours of community service. The case established that releasing malware, even without destructive intent, was a federal crime. Morris later became a tenured professor at MIT.
+                    </p>
+                </div>
+            </section>
+
+
+            <!-- ==============================
+                 SECTION 7 — EVOLUTION TIMELINE
+                 ============================== -->
+            <section id="evolution">
+                <div class="flex items-center gap-4 mb-8">
+                    <span class="font-label text-[9px] uppercase tracking-[0.4em] text-primary font-bold">07</span>
+                    <div class="h-px flex-grow bg-outline-variant"></div>
+                </div>
+                <h2 class="font-headline text-2xl font-bold uppercase tracking-tight mb-6 text-on-surface">The Evolution Timeline: Curiosity → Crime → Warfare</h2>
+
+                <p class="text-on-surface-variant leading-relaxed mb-12">
+                    The history of malware maps almost exactly onto the history of computing itself. Each era of new technology produced a new class of threat — and a new motivation behind it.
+                </p>
+
+                <!-- Timeline -->
+                <div class="space-y-0">
+
+                    <div class="flex gap-6">
+                        <div class="flex flex-col items-center">
+                            <div class="w-3 h-3 bg-primary shrink-0 mt-1"></div>
+                            <div class="w-px flex-grow bg-outline-variant mt-1"></div>
+                        </div>
+                        <div class="pb-10">
+                            <div class="flex items-center gap-4 mb-2">
+                                <span class="font-label text-[10px] text-primary uppercase tracking-widest font-bold">1971–1981</span>
+                                <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant opacity-60">Academic Era</span>
+                            </div>
+                            <h3 class="font-headline text-base font-bold uppercase mb-2">The Curiosity Phase</h3>
+                            <p class="text-on-surface-variant text-sm leading-relaxed">Self-replicating programs exist only on ARPANET and in academic papers. John von Neumann's 1949 theory of self-reproducing automata provides the mathematical foundation. Fred Cohen formally defines "computer virus" in his 1983 PhD dissertation at USC. Motivation: intellectual exploration, theoretical computer science.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-6">
+                        <div class="flex flex-col items-center">
+                            <div class="w-3 h-3 bg-primary shrink-0 mt-1"></div>
+                            <div class="w-px flex-grow bg-outline-variant mt-1"></div>
+                        </div>
+                        <div class="pb-10">
+                            <div class="flex items-center gap-4 mb-2">
+                                <span class="font-label text-[10px] text-primary uppercase tracking-widest font-bold">1982–1995</span>
+                                <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant opacity-60">Floppy Era</span>
+                            </div>
+                            <h3 class="font-headline text-base font-bold uppercase mb-2">The Prank &amp; Vandalism Phase</h3>
+                            <p class="text-on-surface-variant text-sm leading-relaxed">Elk Cloner, Brain, Stoned, Michelangelo, Cascade, Jerusalem, Melissa (Word macro). Viruses spread via floppy disks and bulletin board systems (BBS). Motivation shifts from curiosity to pranks, bragging rights, and occasional destructive intent. The anti-virus industry is born: McAfee (1987), Symantec Norton (1990).</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-6">
+                        <div class="flex flex-col items-center">
+                            <div class="w-3 h-3 bg-primary shrink-0 mt-1"></div>
+                            <div class="w-px flex-grow bg-outline-variant mt-1"></div>
+                        </div>
+                        <div class="pb-10">
+                            <div class="flex items-center gap-4 mb-2">
+                                <span class="font-label text-[10px] text-primary uppercase tracking-widest font-bold">1995–2006</span>
+                                <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant opacity-60">Internet Era</span>
+                            </div>
+                            <h3 class="font-headline text-base font-bold uppercase mb-2">The Scale Phase</h3>
+                            <p class="text-on-surface-variant text-sm leading-relaxed">ILOVEYOU (2000, $10B damage), Code Red (2001, 359,000 machines in 14 hours), Slammer/Sapphire (2003, infected 75,000 hosts in 10 minutes), MyDoom (2004, fastest-spreading email worm ever). The internet provides unlimited propagation surface. Motivation evolves: spam distribution, botnet construction, early financial fraud via phishing.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-6">
+                        <div class="flex flex-col items-center">
+                            <div class="w-3 h-3 bg-primary shrink-0 mt-1"></div>
+                            <div class="w-px flex-grow bg-outline-variant mt-1"></div>
+                        </div>
+                        <div class="pb-10">
+                            <div class="flex items-center gap-4 mb-2">
+                                <span class="font-label text-[10px] text-primary uppercase tracking-widest font-bold">2006–2015</span>
+                                <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant opacity-60">Cybercrime Era</span>
+                            </div>
+                            <h3 class="font-headline text-base font-bold uppercase mb-2">The Monetization Phase</h3>
+                            <p class="text-on-surface-variant text-sm leading-relaxed">Zeus (2007, banking trojan), SpyEye, Stuxnet (2010, first cyberweapon targeting physical infrastructure), the rise of exploit kits (Blackhole, Angler), sophisticated rootkits, and TDL/TDSS bootkits. The criminal underground industrializes: Malware-as-a-Service (MaaS), crimeware forums, and cryptocurrency enable anonymous monetization. APT groups (APT1, APT28, Lazarus) emerge.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-6">
+                        <div class="flex flex-col items-center">
+                            <div class="w-3 h-3 bg-primary shrink-0 mt-1"></div>
+                            <div class="w-px h-8 bg-outline-variant mt-1"></div>
+                        </div>
+                        <div class="pb-10">
+                            <div class="flex items-center gap-4 mb-2">
+                                <span class="font-label text-[10px] text-primary uppercase tracking-widest font-bold">2015–Present</span>
+                                <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant opacity-60">Warfare Era</span>
+                            </div>
+                            <h3 class="font-headline text-base font-bold uppercase mb-2">The Weaponization Phase</h3>
+                            <p class="text-on-surface-variant text-sm leading-relaxed">WannaCry (2017, NHS crippled, used NSA's EternalBlue), NotPetya (2017, $10B+ damage, disguised as ransomware but actually a wiper), SolarWinds (2020, supply chain compromise of 18,000+ organizations), Colonial Pipeline (2021, ransomware shuts US fuel supply). AI-assisted malware begins to emerge. State actors and criminal groups blur into indistinguishability.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+
+            <!-- ==============================
+                 SECTION 8 — STUXNET DEEP DIVE
+                 ============================== -->
+            <section id="stuxnet">
+                <div class="flex items-center gap-4 mb-8">
+                    <span class="font-label text-[9px] uppercase tracking-[0.4em] text-primary font-bold">08</span>
+                    <div class="h-px flex-grow bg-outline-variant"></div>
+                </div>
+                <h2 class="font-headline text-2xl font-bold uppercase tracking-tight mb-6 text-on-surface">Stuxnet (2010) — Malware Crosses Into the Physical World</h2>
+
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    No discussion of malware evolution is complete without Stuxnet. Discovered in June 2010, Stuxnet was a joint US-Israeli cyberweapon targeting Iran's uranium enrichment facility at Natanz. It represents the single most significant inflection point in malware history — the moment when code caused physical destruction.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div class="bg-surface-container-low border border-outline-variant p-5">
+                        <p class="font-label text-[10px] text-primary uppercase tracking-widest font-bold mb-2">Zero-Days Used</p>
+                        <p class="font-headline text-3xl font-bold text-on-surface mb-1">4</p>
+                        <p class="text-on-surface-variant text-xs">Previous record: 1. Stuxnet used four simultaneous Windows zero-day exploits.</p>
+                    </div>
+                    <div class="bg-surface-container-low border border-outline-variant p-5">
+                        <p class="font-label text-[10px] text-primary uppercase tracking-widest font-bold mb-2">Centrifuges Destroyed</p>
+                        <p class="font-headline text-3xl font-bold text-on-surface mb-1">~1,000</p>
+                        <p class="text-on-surface-variant text-xs">Natanz facility's IR-1 centrifuges physically destroyed by overspinning.</p>
+                    </div>
+                    <div class="bg-surface-container-low border border-outline-variant p-5">
+                        <p class="font-label text-[10px] text-primary uppercase tracking-widest font-bold mb-2">Development Cost</p>
+                        <p class="font-headline text-3xl font-bold text-on-surface mb-1">$1B+</p>
+                        <p class="text-on-surface-variant text-xs">Estimated development cost — making it the most expensive malware ever created.</p>
+                    </div>
+                </div>
+
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    Stuxnet targeted Siemens S7-315 and S7-417 programmable logic controllers (PLCs) that controlled centrifuge motors. The worm would silently alter the centrifuge spin speeds — causing them to operate outside safe parameters — while simultaneously reporting normal readings to operators. The centrifuges physically tore themselves apart while Iranian engineers watched dashboards showing green.
+                </p>
+
+                <div class="border-l-4 border-primary bg-primary/5 p-6">
+                    <p class="text-[10px] font-label font-bold text-primary tracking-widest uppercase mb-2">The Pandora Problem</p>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">
+                        When Stuxnet escaped containment and spread beyond Natanz to computers globally, it revealed its full code to the world's malware researchers. The techniques it introduced — PLC targeting, SCADA attacks, hardware-level sabotage — became publicly documented. Every nation-state and sophisticated criminal group now had a blueprint. The weapon that was supposed to be covert became a how-to manual.
+                    </p>
+                </div>
+            </section>
+
+
+            <!-- ==============================
+                 SECTION 9 — IMPACT ON CYBERSECURITY
+                 ============================== -->
+            <section id="impact">
+                <div class="flex items-center gap-4 mb-8">
+                    <span class="font-label text-[9px] uppercase tracking-[0.4em] text-primary font-bold">09</span>
+                    <div class="h-px flex-grow bg-outline-variant"></div>
+                </div>
+                <h2 class="font-headline text-2xl font-bold uppercase tracking-tight mb-6 text-on-surface">How Virus History Shaped Modern Cybersecurity</h2>
+
+                <p class="text-on-surface-variant leading-relaxed mb-8">
+                    Every major defensive security concept today was born as a direct response to a specific malware capability. The virus history is not just a history of attacks — it is a history of the entire discipline.
+                </p>
+
+                <div class="space-y-4 mb-8">
+                    <div class="flex gap-4 p-5 bg-surface-container-low border border-outline-variant group hover:border-primary/30 transition-colors">
+                        <span class="font-headline text-2xl text-primary/30 font-bold shrink-0 w-8">→</span>
+                        <div>
+                            <p class="font-label text-[10px] uppercase tracking-widest text-on-surface font-bold mb-2">Antivirus → Endpoint Detection &amp; Response (EDR)</p>
+                            <p class="text-on-surface-variant text-xs leading-relaxed">Signature-based AV (born from Reaper) was defeated by polymorphic viruses in the 1990s. Heuristic detection replaced it, which was defeated by packing and obfuscation. EDR (behavioral monitoring, memory scanning, process telemetry) is the current response to fileless malware that never writes to disk.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 p-5 bg-surface-container-low border border-outline-variant group hover:border-primary/30 transition-colors">
+                        <span class="font-headline text-2xl text-primary/30 font-bold shrink-0 w-8">→</span>
+                        <div>
+                            <p class="font-label text-[10px] uppercase tracking-widest text-on-surface font-bold mb-2">Firewalls → Zero Trust Architecture</p>
+                            <p class="text-on-surface-variant text-xs leading-relaxed">The Morris Worm's exploitation of trusted network relationships (r-services) directly motivated the development of firewalls and network segmentation. Modern Zero Trust architecture — "never trust, always verify" — is the evolved response to the lesson that internal network position provides no inherent security guarantee.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 p-5 bg-surface-container-low border border-outline-variant group hover:border-primary/30 transition-colors">
+                        <span class="font-headline text-2xl text-primary/30 font-bold shrink-0 w-8">→</span>
+                        <div>
+                            <p class="font-label text-[10px] uppercase tracking-widest text-on-surface font-bold mb-2">Patch Management</p>
+                            <p class="text-on-surface-variant text-xs leading-relaxed">WannaCry (2017) infected hundreds of thousands of machines using EternalBlue — an exploit for MS17-010, a vulnerability that Microsoft had patched two months earlier. The mass infection existed entirely because organizations didn't apply available patches. This incident defined modern patch management urgency and the 30-day patching SLA standard.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 p-5 bg-surface-container-low border border-outline-variant group hover:border-primary/30 transition-colors">
+                        <span class="font-headline text-2xl text-primary/30 font-bold shrink-0 w-8">→</span>
+                        <div>
+                            <p class="font-label text-[10px] uppercase tracking-widest text-on-surface font-bold mb-2">Threat Intelligence &amp; IOC Sharing</p>
+                            <p class="text-on-surface-variant text-xs leading-relaxed">The Brain virus authors left their contact details in the code. Modern threat intelligence inverts this — defenders extract, share, and operationalize indicators of compromise (IOCs), TTPs (Tactics, Techniques, Procedures), and campaign infrastructure. MITRE ATT&amp;CK, ISACs, and platforms like VirusTotal formalize this knowledge sharing at scale.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 p-5 bg-surface-container-low border border-outline-variant group hover:border-primary/30 transition-colors">
+                        <span class="font-headline text-2xl text-primary/30 font-bold shrink-0 w-8">→</span>
+                        <div>
+                            <p class="font-label text-[10px] uppercase tracking-widest text-on-surface font-bold mb-2">ICS/OT Security</p>
+                            <p class="text-on-surface-variant text-xs leading-relaxed">Before Stuxnet, industrial control systems were considered outside the threat model. The assumption was: air-gapped networks are safe, and malware only targets computers, not machinery. Stuxnet demolished both assumptions. ICS/OT security became its own discipline overnight, and the attack surface of modern infrastructure expanded to include every SCADA and PLC system globally.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ==============================
+                 SECTION 10 — CONCLUSION
+                 ============================== -->
+            <section id="conclusion">
+                <div class="flex items-center gap-4 mb-8">
+                    <span class="font-label text-[9px] uppercase tracking-[0.4em] text-primary font-bold">10</span>
+                    <div class="h-px flex-grow bg-outline-variant"></div>
+                </div>
+                <h2 class="font-headline text-2xl font-bold uppercase tracking-tight mb-6 text-on-surface">Conclusion</h2>
+
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    Bob Thomas did not intend to start an arms race when he wrote Creeper in 1971. Rich Skrenta did not intend to invent boot sector infection when he pranked his friends with Elk Cloner in 1982. The Alvi brothers did not intend to pioneer stealth malware when they embedded their phone number in Brain in 1986. And Robert Morris almost certainly did not intend to crash a tenth of the internet in 1988.
+                </p>
+                <p class="text-on-surface-variant leading-relaxed mb-6">
+                    But intent is irrelevant once the knowledge exists. Each of these programs proved something new was possible — and once proven possible, the capability was adopted, extended, and weaponized by those who followed. The trajectory from Creeper to WannaCry is not random. It is the logical, predictable product of code with one capability: the ability to copy itself.
+                </p>
+                <p class="text-on-surface-variant leading-relaxed">
+                    Modern security engineers study this history not for nostalgia, but because the fundamental techniques — replication, stealth, payload triggering, exploitation of trust — have not changed. They have only been refined, automated, and scaled. Understanding the origin is understanding the threat model.
+                </p>
+
+                <!-- Tags -->
+                <div class="flex flex-wrap gap-2 mt-10 pt-10 border-t border-outline-variant">
+                    <span class="border border-outline-variant text-on-surface-variant text-[9px] font-label uppercase px-3 py-1.5 tracking-widest">#MALWARE_HISTORY</span>
+                    <span class="border border-outline-variant text-on-surface-variant text-[9px] font-label uppercase px-3 py-1.5 tracking-widest">#CREEPER</span>
+                    <span class="border border-outline-variant text-on-surface-variant text-[9px] font-label uppercase px-3 py-1.5 tracking-widest">#ELK_CLONER</span>
+                    <span class="border border-outline-variant text-on-surface-variant text-[9px] font-label uppercase px-3 py-1.5 tracking-widest">#BRAIN_VIRUS</span>
+                    <span class="border border-outline-variant text-on-surface-variant text-[9px] font-label uppercase px-3 py-1.5 tracking-widest">#MORRIS_WORM</span>
+                    <span class="border border-outline-variant text-on-surface-variant text-[9px] font-label uppercase px-3 py-1.5 tracking-widest">#STUXNET</span>
+                    <span class="border border-outline-variant text-on-surface-variant text-[9px] font-label uppercase px-3 py-1.5 tracking-widest">#WANNACRY</span>
+                    <span class="border border-outline-variant text-on-surface-variant text-[9px] font-label uppercase px-3 py-1.5 tracking-widest">#THREAT_EVOLUTION</span>
+                </div>
+            </section>
+
+
+            <!-- ==============================
+                 REFERENCES
+                 ============================== -->
+            <section id="references">
+                <div class="flex items-center gap-4 mb-8">
+                    <span class="font-label text-[9px] uppercase tracking-[0.4em] text-primary font-bold">REF</span>
+                    <div class="h-px flex-grow bg-outline-variant"></div>
+                </div>
+                <h2 class="font-headline text-2xl font-bold uppercase tracking-tight mb-8 text-on-surface">References</h2>
+
+                <div class="space-y-4">
+                    <div class="flex gap-4 p-4 bg-surface-container-low border border-outline-variant hover:border-primary/30 transition-colors group">
+                        <span class="font-label text-[9px] text-primary uppercase tracking-widest shrink-0 mt-0.5">[01]</span>
+                        <div>
+                            <p class="text-on-surface text-xs font-medium mb-1">Cohen, F. (1987). Computer Viruses: Theory and Experiments.</p>
+                            <p class="text-on-surface-variant text-[11px]">Computers &amp; Security, 6(1), 22–35. — The foundational academic paper formally defining computer viruses.</p>
+                            <a href="https://doi.org/10.1016/0167-4048(87)90122-2" target="_blank" class="text-primary text-[10px] font-label uppercase tracking-widest hover:opacity-80 transition-opacity mt-1 inline-flex items-center gap-1">
+                                doi.org/10.1016/0167-4048(87)90122-2 <span class="material-symbols-outlined" style="font-size:12px;">open_in_new</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 p-4 bg-surface-container-low border border-outline-variant hover:border-primary/30 transition-colors group">
+                        <span class="font-label text-[9px] text-primary uppercase tracking-widest shrink-0 mt-0.5">[02]</span>
+                        <div>
+                            <p class="text-on-surface text-xs font-medium mb-1">Orman, H. (2003). The Morris Worm: A Fifteen-Year Perspective.</p>
+                            <p class="text-on-surface-variant text-[11px]">IEEE Security &amp; Privacy, 1(5), 35–43. — Technical retrospective on the first major internet worm.</p>
+                            <a href="https://doi.org/10.1109/MSECP.2003.1236233" target="_blank" class="text-primary text-[10px] font-label uppercase tracking-widest hover:opacity-80 transition-opacity mt-1 inline-flex items-center gap-1">
+                                doi.org/10.1109/MSECP.2003.1236233 <span class="material-symbols-outlined" style="font-size:12px;">open_in_new</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 p-4 bg-surface-container-low border border-outline-variant hover:border-primary/30 transition-colors group">
+                        <span class="font-label text-[9px] text-primary uppercase tracking-widest shrink-0 mt-0.5">[03]</span>
+                        <div>
+                            <p class="text-on-surface text-xs font-medium mb-1">Langner, R. (2011). Stuxnet: Dissecting a Cyberwarfare Weapon.</p>
+                            <p class="text-on-surface-variant text-[11px]">IEEE Security &amp; Privacy, 9(3), 49–51. — Technical analysis by the researcher who first reverse-engineered Stuxnet's PLC payload.</p>
+                            <a href="https://doi.org/10.1109/MSP.2011.67" target="_blank" class="text-primary text-[10px] font-label uppercase tracking-widest hover:opacity-80 transition-opacity mt-1 inline-flex items-center gap-1">
+                                doi.org/10.1109/MSP.2011.67 <span class="material-symbols-outlined" style="font-size:12px;">open_in_new</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 p-4 bg-surface-container-low border border-outline-variant hover:border-primary/30 transition-colors group">
+                        <span class="font-label text-[9px] text-primary uppercase tracking-widest shrink-0 mt-0.5">[04]</span>
+                        <div>
+                            <p class="text-on-surface text-xs font-medium mb-1">McAfee Labs. (2017). WannaCry Ransomware Campaign Technical Analysis.</p>
+                            <p class="text-on-surface-variant text-[11px]">McAfee Threat Research — EternalBlue exploitation analysis, propagation mechanisms, and attribution overview.</p>
+                            <a href="https://www.mcafee.com/enterprise/en-us/assets/reports/rp-wannacry-ransomware.pdf" target="_blank" class="text-primary text-[10px] font-label uppercase tracking-widest hover:opacity-80 transition-opacity mt-1 inline-flex items-center gap-1">
+                                mcafee.com/enterprise — WannaCry Report <span class="material-symbols-outlined" style="font-size:12px;">open_in_new</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 p-4 bg-surface-container-low border border-outline-variant hover:border-primary/30 transition-colors group">
+                        <span class="font-label text-[9px] text-primary uppercase tracking-widest shrink-0 mt-0.5">[05]</span>
+                        <div>
+                            <p class="text-on-surface text-xs font-medium mb-1">Fruhlinger, J. (2018). The Morris Worm: Internet's First Major Malware Attack.</p>
+                            <p class="text-on-surface-variant text-[11px]">CSO Online — Comprehensive historical account of the 1988 Morris Worm incident and its legal aftermath.</p>
+                            <a href="https://www.csoonline.com/article/562715/the-morris-worm-internet-s-first-major-malware-attack.html" target="_blank" class="text-primary text-[10px] font-label uppercase tracking-widest hover:opacity-80 transition-opacity mt-1 inline-flex items-center gap-1">
+                                csoonline.com — Morris Worm History <span class="material-symbols-outlined" style="font-size:12px;">open_in_new</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 p-4 bg-surface-container-low border border-outline-variant hover:border-primary/30 transition-colors group">
+                        <span class="font-label text-[9px] text-primary uppercase tracking-widest shrink-0 mt-0.5">[06]</span>
+                        <div>
+                            <p class="text-on-surface text-xs font-medium mb-1">von Neumann, J. (1966). Theory of Self-Reproducing Automata.</p>
+                            <p class="text-on-surface-variant text-[11px]">University of Illinois Press (edited and completed by Arthur W. Burks). — The mathematical theory that underlies all self-replicating code.</p>
+                            <a href="https://archive.org/details/theoryofselfrepr00vonn_0" target="_blank" class="text-primary text-[10px] font-label uppercase tracking-widest hover:opacity-80 transition-opacity mt-1 inline-flex items-center gap-1">
+                                archive.org — Full text <span class="material-symbols-outlined" style="font-size:12px;">open_in_new</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 p-4 bg-surface-container-low border border-outline-variant hover:border-primary/30 transition-colors group">
+                        <span class="font-label text-[9px] text-primary uppercase tracking-widest shrink-0 mt-0.5">[07]</span>
+                        <div>
+                            <p class="text-on-surface text-xs font-medium mb-1">MITRE ATT&amp;CK Framework.</p>
+                            <p class="text-on-surface-variant text-[11px]">MITRE Corporation — Authoritative knowledge base of adversary tactics, techniques, and procedures based on real-world observations.</p>
+                            <a href="https://attack.mitre.org/" target="_blank" class="text-primary text-[10px] font-label uppercase tracking-widest hover:opacity-80 transition-opacity mt-1 inline-flex items-center gap-1">
+                                attack.mitre.org <span class="material-symbols-outlined" style="font-size:12px;">open_in_new</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 p-4 bg-surface-container-low border border-outline-variant hover:border-primary/30 transition-colors group">
+                        <span class="font-label text-[9px] text-primary uppercase tracking-widest shrink-0 mt-0.5">[08]</span>
+                        <div>
+                            <p class="text-on-surface text-xs font-medium mb-1">Sanger, D.E. (2012). Confront and Conceal: Obama's Secret Wars and Surprising Use of American Power.</p>
+                            <p class="text-on-surface-variant text-[11px]">Crown Publishers. — Journalism-level account of the US-Israel Olympic Games operation that produced Stuxnet.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </article>
+
+
+        <!-- ============================
+             SIDEBAR — TOC + META
+             ============================ -->
+        <aside class="w-full lg:w-72 flex-shrink-0 space-y-10">
+
+            <!-- Article Meta -->
+            <div class="bg-surface-container-low border border-outline-variant p-6 space-y-5">
+                <h3 class="font-label text-[10px] font-bold text-primary uppercase tracking-[0.4em]">Article Meta</h3>
+                <div class="space-y-3 text-xs">
+                    <div class="flex justify-between items-start">
+                        <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant">Author</span>
+                        <span class="font-label text-[10px] text-on-surface text-right">Vikram</span>
+                    </div>
+                    <div class="h-px bg-outline-variant"></div>
+                    <div class="flex justify-between items-start">
+                        <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant">Published</span>
+                        <span class="font-label text-[10px] text-on-surface">19.04.2026</span>
+                    </div>
+                    <div class="h-px bg-outline-variant"></div>
+                    <div class="flex justify-between items-start">
+                        <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant">Category</span>
+                        <span class="font-label text-[10px] text-primary">Malware Analysis</span>
+                    </div>
+                    <div class="h-px bg-outline-variant"></div>
+                    <div class="flex justify-between items-start">
+                        <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant">Read Time</span>
+                        <span class="font-label text-[10px] text-on-surface">~14 min</span>
+                    </div>
+                    <div class="h-px bg-outline-variant"></div>
+                    <div class="flex justify-between items-start">
+                        <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant">References</span>
+                        <span class="font-label text-[10px] text-on-surface">08</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table of Contents -->
+            <div class="bg-surface-container-low border border-outline-variant p-6">
+                <h3 class="font-label text-[10px] font-bold text-primary uppercase tracking-[0.4em] mb-6">Contents</h3>
+                <nav class="space-y-3">
+                    <a href="#introduction" class="flex items-center gap-3 text-[10px] font-label uppercase tracking-[0.15em] text-on-surface-variant hover:text-primary transition-colors group">
+                        <span class="text-[8px] text-primary/60">01</span>
+                        <span>Introduction</span>
+                    </a>
+                    <a href="#creeper" class="flex items-center gap-3 text-[10px] font-label uppercase tracking-[0.15em] text-on-surface-variant hover:text-primary transition-colors group">
+                        <span class="text-[8px] text-primary/60">02</span>
+                        <span>Creeper (1971)</span>
+                    </a>
+                    <a href="#reaper" class="flex items-center gap-3 text-[10px] font-label uppercase tracking-[0.15em] text-on-surface-variant hover:text-primary transition-colors group">
+                        <span class="text-[8px] text-primary/60">03</span>
+                        <span>Reaper (1972)</span>
+                    </a>
+                    <a href="#elk-cloner" class="flex items-center gap-3 text-[10px] font-label uppercase tracking-[0.15em] text-on-surface-variant hover:text-primary transition-colors group">
+                        <span class="text-[8px] text-primary/60">04</span>
+                        <span>Elk Cloner (1982)</span>
+                    </a>
+                    <a href="#brain" class="flex items-center gap-3 text-[10px] font-label uppercase tracking-[0.15em] text-on-surface-variant hover:text-primary transition-colors group">
+                        <span class="text-[8px] text-primary/60">05</span>
+                        <span>Brain (1986)</span>
+                    </a>
+                    <a href="#morris-worm" class="flex items-center gap-3 text-[10px] font-label uppercase tracking-[0.15em] text-on-surface-variant hover:text-primary transition-colors group">
+                        <span class="text-[8px] text-primary/60">06</span>
+                        <span>Morris Worm (1988)</span>
+                    </a>
+                    <a href="#evolution" class="flex items-center gap-3 text-[10px] font-label uppercase tracking-[0.15em] text-on-surface-variant hover:text-primary transition-colors group">
+                        <span class="text-[8px] text-primary/60">07</span>
+                        <span>Evolution Timeline</span>
+                    </a>
+                    <a href="#stuxnet" class="flex items-center gap-3 text-[10px] font-label uppercase tracking-[0.15em] text-on-surface-variant hover:text-primary transition-colors group">
+                        <span class="text-[8px] text-primary/60">08</span>
+                        <span>Stuxnet (2010)</span>
+                    </a>
+                    <a href="#impact" class="flex items-center gap-3 text-[10px] font-label uppercase tracking-[0.15em] text-on-surface-variant hover:text-primary transition-colors group">
+                        <span class="text-[8px] text-primary/60">09</span>
+                        <span>Impact on Security</span>
+                    </a>
+                    <a href="#conclusion" class="flex items-center gap-3 text-[10px] font-label uppercase tracking-[0.15em] text-on-surface-variant hover:text-primary transition-colors group">
+                        <span class="text-[8px] text-primary/60">10</span>
+                        <span>Conclusion</span>
+                    </a>
+                    <a href="#references" class="flex items-center gap-3 text-[10px] font-label uppercase tracking-[0.15em] text-on-surface-variant hover:text-primary transition-colors group">
+                        <span class="text-[8px] text-primary/60">→</span>
+                        <span>References</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Timeline Quick Ref -->
+            <div class="bg-surface-container-low border border-outline-variant p-6">
+                <h3 class="font-label text-[10px] font-bold text-primary uppercase tracking-[0.4em] mb-6">Key Dates</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3">
+                        <span class="font-label text-[9px] text-primary font-bold w-10 shrink-0">1971</span>
+                        <span class="text-on-surface-variant text-[10px]">Creeper — ARPANET</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-label text-[9px] text-primary font-bold w-10 shrink-0">1972</span>
+                        <span class="text-on-surface-variant text-[10px]">Reaper — First AV</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-label text-[9px] text-primary font-bold w-10 shrink-0">1982</span>
+                        <span class="text-on-surface-variant text-[10px]">Elk Cloner — Apple II</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-label text-[9px] text-primary font-bold w-10 shrink-0">1986</span>
+                        <span class="text-on-surface-variant text-[10px]">Brain — First PC virus</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-label text-[9px] text-primary font-bold w-10 shrink-0">1988</span>
+                        <span class="text-on-surface-variant text-[10px]">Morris Worm — Internet</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-label text-[9px] text-primary font-bold w-10 shrink-0">2000</span>
+                        <span class="text-on-surface-variant text-[10px]">ILOVEYOU — $10B</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-label text-[9px] text-primary font-bold w-10 shrink-0">2010</span>
+                        <span class="text-on-surface-variant text-[10px]">Stuxnet — Physical damage</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-label text-[9px] text-primary font-bold w-10 shrink-0">2017</span>
+                        <span class="text-on-surface-variant text-[10px]">WannaCry — Global crisis</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-label text-[9px] text-primary font-bold w-10 shrink-0">2020</span>
+                        <span class="text-on-surface-variant text-[10px]">SolarWinds — Supply chain</span>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+    </div>
+
+</main>
+
+
+<!-- ============================================================
+     FOOTER — Same on all pages. EDIT: social links and copyright.
+     ============================================================ -->
+<footer class="w-full py-16 bg-background/90 backdrop-blur-md border-t border-outline-variant mt-24">
+    <div class="flex flex-col md:flex-row justify-between items-center px-12 max-w-[1440px] mx-auto gap-10">
+        <div class="flex flex-col gap-2">
+            <!-- EDIT: Brand name and tagline -->
+            <span class="font-headline font-bold text-primary text-xl tracking-tighter">Thomas Shelby </span>
+            <span class="font-label text-[10px] text-on-surface/40 uppercase tracking-[0.4em]">Security Engineer · Pentester · Red Team</span>
+        </div>
+        <div class="flex gap-12">
+            <!-- EDIT: Social links -->
+            <a class="font-label text-[11px] tracking-widest uppercase text-on-surface/50 hover:text-primary transition-colors"
+               href="https://github.com/dorsia74964" target="_blank">GitHub</a>
+            <a class="font-label text-[11px] tracking-widest uppercase text-on-surface/50 hover:text-primary transition-colors"
+               href="https://www.linkedin.com/in/dorisa74964" target="_blank">LinkedIn</a>
+            <!-- EDIT: Replace '#' with your Twitter/X link -->
+            <a class="font-label text-[11px] tracking-widest uppercase text-on-surface/50 hover:text-primary transition-colors" href="#">Twitter</a>
+        </div>
+        <!-- EDIT: Copyright year -->
+        <div class="font-label text-[11px] tracking-widest uppercase text-on-surface/30">
+            © 2026 Thomas Shelby. ALL RIGHTS RESERVED.
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
