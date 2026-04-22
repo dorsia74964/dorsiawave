@@ -14,7 +14,6 @@
   <img alt="HTML5" src="https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white"/>
   <img alt="TailwindCSS" src="https://img.shields.io/badge/Tailwind-38BDF8?style=flat-square&logo=tailwindcss&logoColor=white"/>
   <img alt="Static Site" src="https://img.shields.io/badge/Build-Static%20%2F%20No%20Deps-0a0a0a?style=flat-square"/>
-  <img alt="SEO" src="https://img.shields.io/badge/SEO-Optimized-3366ff?style=flat-square"/>
   <img alt="Last Commit" src="https://img.shields.io/github/last-commit/dorisa74964/portfolio?style=flat-square&color=3366ff"/>
 </p>
 
