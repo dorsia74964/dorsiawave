@@ -1,8 +1,3 @@
-<!--
-  README.md — Th0mas_Sh316y Security Engineer Portfolio
-  GitHub: dorisa74964 · Mirror: dorsia74964
--->
-
 <h1 align="center">Th0mas_Sh316y — Security Engineer Portfolio</h1>
 
 <p align="center">
@@ -26,9 +21,9 @@ This repo is the source for [**dorsiawave.dorsia74964.workers.dev**](https://dor
 
 Three entry points:
 
-- 🏠 **Home** → hero, capabilities, pentest projects → [`index.html`](./index.html)
-- 📝 **Blog** → long-form malware &amp; security research → [`blog.html`](./blog.html)
-- 🎯 **CTF Writeups** → rooted machines, step-by-step → [`ctf.html`](./ctf.html)
+- 🏠 **Home** → hero, capabilities, pentest projects → [`index.html`](https://dorsiawave.dorsia74964.workers.dev/)
+- 📝 **Blog** → long-form malware &amp; security research → [`blog.html`](https://dorsiawave.dorsia74964.workers.dev/blog)
+- 🎯 **CTF Writeups** → rooted machines, step-by-step → [`ctf.html`](https://dorsiawave.dorsia74964.workers.dev/ctf)
 
 ---
 
@@ -36,7 +31,7 @@ Three entry points:
 
 | Post | Category | Status |
 |---|---|---|
-| [The Brain Virus (1986): Two Brothers, Lahore, and the First PC Virus](./blog-worlds-first-virus.html) | Malware history · Case study | Published |
+| [The Brain Virus (1986): Two Brothers, Lahore, and the First PC Virus](https://dorsiawave.dorsia74964.workers.dev/blog-worlds-first-virus) | Malware history · Case study | Published |
 | _More malware &amp; red-team posts in progress_ | — | Queued |
 
 ---
@@ -47,39 +42,23 @@ Three recent engagements — full PDF reports on my [Reports repo](https://githu
 
 | Project | Type | Difficulty | What it tested |
 |---|---|---|---|
-| [Blinders](./post-blinders.html) | Black box | Medium | OSINT → credential reuse → privesc |
-| [Demon](./post-demon.html) | Grey box | Hard | Vhost discovery, Jenkins RCE, sudo misconfig, rbash escape |
-| [KGF](./post-kgf.html) | White box | Hard | SNMP enum, IMAPS creds, r-services pivot, dual-host root |
-| [VulnCMS](./post-vulncms.html) | VulnHub | Medium | Drupalgeddon2 RCE, journalctl GTFObins |
+| [Blinders](https://dorsiawave.dorsia74964.workers.dev/post-blinders) | Black box | Medium | OSINT → credential reuse → privesc |
+| [Demon](https://dorsiawave.dorsia74964.workers.dev/post-demon) | Grey box | Hard | Vhost discovery, Jenkins RCE, sudo misconfig, rbash escape |
+| [KGF](https://dorsiawave.dorsia74964.workers.dev/post-kgf) | White box | Hard | SNMP enum, IMAPS creds, r-services pivot, dual-host root |
+| [VulnCMS](https://dorsiawave.dorsia74964.workers.dev/post-vulncms) | VulnHub | Medium | Drupalgeddon2 RCE, journalctl GTFObins |
 
 ---
+## CTF machines — UTM virtualization guide
 
-## CTF machines — UTM virtualization
+A lot of people ask me how I run my CTF boxes locally on Apple Silicon without dragging a full VMware or VirtualBox install onto the machine. Short answer: **UTM**. It's the free QEMU-based virtualizer for macOS / iPadOS, and once you get the hang of it, it's honestly the cleanest way to spin up a vulnerable VM for practice.
 
-I package a couple of my custom CTF boxes as **UTM** virtual machines so you can run the exact same target I rooted. UTM is the free QEMU-based virtualizer for macOS / iPadOS; on Windows/Linux the `.utm` bundle also works with QEMU directly.
+Instead of rewriting everything here, I put together a small walk-through site covering the setup, network modes, and the gotchas I hit early on:
 
-**Download the VM image:** [utm.dorisa74964.workers.dev](https://utm.dorisa74964.workers.dev/)
+**📖 Guide:** [utm.dorisa74964.workers.dev](https://utm.dorisa74964.workers.dev/)
 
-Once imported, pair the VM with its matching writeup in [`/ctf.html`](./ctf.html). Flags are intentional; passwords in writeups are redacted as `[REDACTED]` per my disclosure policy.
+Give it a read before you attempt any of the writeups in [`CTF's`](https://dorsiawave.dorsia74964.workers.dev/ctf) — a lot of the "why can't I reach the box" questions I get are just network-mode issues the guide already answers.
 
-> ⚠️ These VMs are intentionally vulnerable. **Do not expose them to the open internet.** Keep them on a host-only / NAT interface.
-
----
-
-## Running the site locally
-
-No build step. Pick whichever you have handy:
-
-```bash
-# Python (ships with macOS / most Linux)
-python3 -m http.server 8080
-
-# Node
-npx serve .
-```
-
-Then open <http://localhost:8080>.
-
+> ⚠️ Anything you boot in a CTF context is intentionally vulnerable. Keep it on a host-only / NAT interface. Don't bridge it to your LAN and definitely don't expose it to the open internet.
 ---
 
 ## Contact
