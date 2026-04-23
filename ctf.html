@@ -9,30 +9,31 @@
     <title>CTF Writeups — HackTheBox, VulnHub &amp; Custom Machine Reports</title>
     <meta name="description" content="Full technical writeups and PDF reports for CTF machines — black-box, grey-box, and white-box pentest engagements across Linux and Windows targets."/>
     <meta name="keywords" content="CTF writeups, HackTheBox writeups, VulnHub writeups, penetration testing report, privilege escalation, Active Directory CTF, Linux pentest, Jenkins RCE, Drupalgeddon2, rbash escape, pwned machines"/>
-    <meta name="author" content="Vikram"/>
+    <meta name="author" content="Th0mas_sh316y"/>
     <meta name="robots" content="index, follow, max-image-preview:large"/>
-    <link rel="canonical" href="https://thomasshelby.dev/ctf.html"/>
+    <link rel="canonical" href="https://dorsiawave.dorsia74964.workers.dev/ctf.html"/>
 
     <meta property="og:type" content="website"/>
-    <meta property="og:title" content="CTF Writeups &amp; Pentest Reports — Thomas Shelby"/>
+    <meta property="og:title" content="CTF Writeups &amp; Pentest Reports — Th0mas_sh316y"/>
     <meta property="og:description" content="Reconnaissance to root — step-by-step exploitation walk-throughs with redacted hashes and full PDF reports."/>
-    <meta property="og:image" content="https://thomasshelby.dev/assests/KGFfeatured.png"/>
-    <meta property="og:url" content="https://thomasshelby.dev/ctf.html"/>
-    <meta property="og:site_name" content="Thomas Shelby — Security Engineer"/>
+    <meta property="og:image" content="https://dorsiawave.dorsia74964.workers.dev/assests/KGFfeatured.png"/>
+    <meta property="og:url" content="https://dorsiawave.dorsia74964.workers.dev/ctf.html"/>
+    <meta property="og:site_name" content="Th0mas_sh316y — Security Engineer"/>
     <meta name="twitter:card" content="summary_large_image"/>
-    <meta name="twitter:title" content="CTF Writeups — Thomas Shelby"/>
+    <meta name="twitter:title" content="CTF Writeups — Th0mas_sh316y"/>
     <meta name="twitter:description" content="Filterable catalogue of CTF machine writeups: Linux, Windows, Easy to Hard."/>
-    <meta name="twitter:image" content="https://thomasshelby.dev/assests/KGFfeatured.png"/>
+    <meta name="twitter:image" content="https://dorsiawave.dorsia74964.workers.dev/assests/KGFfeatured.png"/>
+    <meta name="twitter:site" content="@Th0mas_sh316y"/>
 
     <!-- JSON-LD: CollectionPage -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
-      "name": "CTF Writeups — Thomas Shelby",
-      "url": "https://thomasshelby.dev/ctf.html",
+      "name": "CTF Writeups — Th0mas_sh316y",
+      "url": "https://dorsiawave.dorsia74964.workers.dev/ctf.html",
       "description": "Catalogue of CTF machine writeups and pentest reports.",
-      "author": { "@type": "Person", "name": "Vikram" }
+      "author": { "@type": "Person", "name": "Th0mas_sh316y" }
     }
     </script>
 
@@ -203,8 +204,7 @@
      ============================================================ -->
 <nav class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant">
     <div class="flex justify-between items-center w-full px-8 py-5 max-w-[1440px] mx-auto">
-        <!-- EDIT: Brand name -->
-        <div class="text-xl font-bold tracking-tighter text-primary font-headline">Thomas Shelby</div>
+        <div class="text-xl font-bold tracking-tighter text-primary font-headline">Th0mas_sh316y</div>
         <div class="hidden md:flex items-center space-x-10">
             <a class="font-label tracking-tighter text-[11px] uppercase text-on-surface/60 hover:text-primary transition-colors" href="index.html">Home</a>
             <a class="font-label tracking-tighter text-[11px] uppercase text-on-surface/60 hover:text-primary transition-colors" href="blog.html">Blog</a>
@@ -231,16 +231,13 @@
                     Every box I've rooted, written up the way I wish more writeups were written — the failed paths, the aha moment, the exact payload, the privesc. No hand-waving. If something took me six hours, I say so.
                 </p>
             </div>
-            <!-- EDIT: Update Total Pwned and Reports Filed numbers -->
-            <div class="flex items-center gap-12 pb-2">
+                <div class="flex items-center gap-12 pb-2">
                 <div class="text-right">
                     <div class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Total Pwned</div>
-                    <!-- EDIT: Change number -->
-                    <div class="font-headline text-4xl font-bold text-primary">20</div>
+                    <div class="font-headline text-4xl font-bold text-primary">21</div>
                 </div>
                 <div class="text-right">
                     <div class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Reports Filed</div>
-                    <!-- EDIT: Change number -->
                     <div class="font-headline text-4xl font-bold text-on-surface">03</div>
                 </div>
             </div>
@@ -635,27 +632,41 @@
         </div>
 
         <!-- ============================
-             SLOT C — fill when next writeup is ready (col-3)
-             EDIT: data-platform, data-difficulty, machine name, description, href
+             MACHINE CARD — MONEYBOX 1 (Easy · Linux · VulnHub · col-3)
              ============================ -->
-        <div class="md:col-span-3 group relative overflow-hidden bg-surface-container-low border border-outline-variant min-h-[340px] flex flex-col justify-end p-7 hover:border-primary/20 transition-all duration-500"
-             data-machine data-platform="linux" data-difficulty="medium">
+        <div class="md:col-span-3 group relative overflow-hidden bg-surface-container-low border border-outline-variant min-h-[340px] flex flex-col justify-end p-7 hover:border-primary/40 transition-all duration-500"
+             data-machine data-platform="linux" data-difficulty="easy">
+
             <div class="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent"></div>
+
+            <!-- Top badges -->
             <div class="absolute top-5 left-5 flex flex-wrap gap-2 z-10">
-                <span class="border border-primary/20 text-primary/50 font-label text-[9px] uppercase px-2.5 py-1 tracking-widest flex items-center gap-1.5">
+                <span class="border border-primary/30 text-primary font-label text-[9px] uppercase px-2.5 py-1 tracking-widest bg-primary/5 flex items-center gap-1.5">
                     <span class="material-symbols-outlined" style="font-size:12px;">terminal</span> Linux
                 </span>
-                <span class="border border-primary/20 text-primary/50 font-label text-[9px] uppercase px-2.5 py-1 tracking-widest">Medium</span>
+                <span class="border border-outline-variant text-on-surface-variant font-label text-[9px] uppercase px-2.5 py-1 tracking-widest">Easy</span>
+                <span class="border border-outline-variant text-on-surface-variant font-label text-[9px] uppercase px-2.5 py-1 tracking-widest">VulnHub</span>
             </div>
+
+            <!-- Top-right: icon -->
             <div class="absolute top-5 right-5 z-10">
-                <span class="material-symbols-outlined text-primary/20" style="font-size:28px;">radar</span>
+                <span class="material-symbols-outlined text-primary/30 group-hover:text-primary/60 transition-colors" style="font-size:28px;">lock_open</span>
             </div>
+
+            <!-- Bottom content -->
             <div class="relative z-10">
-                <h2 class="font-headline text-xl font-bold mb-2 tracking-tighter uppercase text-on-surface/40">SLOT_C</h2>
-                <p class="text-on-surface-variant/40 mb-5 font-body text-xs leading-relaxed">Machine currently in progress. Writeup pending.</p>
-                <div class="flex items-center gap-2">
-                    <span class="w-1.5 h-1.5 bg-primary/40 animate-pulse"></span>
-                    <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant/40">In Progress</span>
+                <h2 class="font-headline text-2xl font-bold mb-2 tracking-tighter uppercase">MACHINE: MONEYBOX 1</h2>
+                <p class="text-on-surface-variant mb-5 font-body text-xs leading-relaxed opacity-80">
+                    Anonymous FTP image download, stegseek steganography to extract SSH credentials, and sudo python3 GTFObins one-liner to root.
+                </p>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 text-primary">
+                        <span class="material-symbols-outlined text-sm" style='font-variation-settings: "FILL" 1;'>verified</span>
+                        <span class="font-label text-[10px] uppercase tracking-widest">Pwned</span>
+                    </div>
+                    <a href="post-moneybox.html" class="font-label text-[10px] uppercase tracking-widest text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
+                        Writeup <span class="material-symbols-outlined" style="font-size:14px;">arrow_forward</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -904,8 +915,7 @@
 <footer class="w-full py-16 bg-background/90 backdrop-blur-md border-t border-outline-variant mt-24">
     <div class="flex flex-col md:flex-row justify-between items-center px-12 max-w-[1440px] mx-auto gap-10">
         <div class="flex flex-col gap-2">
-            <!-- EDIT: Brand name and tagline -->
-            <span class="font-headline font-bold text-primary text-xl tracking-tighter">Thomas Shelby</span>
+            <span class="font-headline font-bold text-primary text-xl tracking-tighter">Th0mas_sh316y</span>
             <span class="font-label text-[10px] text-on-surface/40 uppercase tracking-[0.4em]">Security Engineer · Pentester · Red Team</span>
         </div>
         <div class="flex gap-12">
